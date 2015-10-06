@@ -18,11 +18,69 @@ enum {
     , HERO_SPEED = 2
 };
 
-class Sprite {
+class BaseSprite {
+public: int x, y;
+		BaseSprite() : x(0), y(0) {}
+};
+
+class Sprite: public BaseSprite {
 public:
-    int x, y ;
-    Sprite() :x(0), y(0) {}
-} ;
+    Sprite()
+		: BaseSprite()
+		, mStates(0)
+		, mState(0)
+		, mWidth(0)
+		, mHeight(0)
+	{
+	}
+	
+	Sprite(int states, int width, int height)
+		: BaseSprite()
+		, mStates(states)
+		, mState(0)
+		, mWidth(width)
+		, mHeight(height)
+	{
+	}
+
+	void update_right()
+	{
+		if (x % 20 == 0)
+		{
+			mState++;
+			if (mStates < mState)
+			{
+				mState = 0;
+			}
+		}
+	}
+
+	void update_left()
+	{
+		if (x % 20 == 0)
+		{
+			mState--;
+			if (0 > mState)
+			{
+				mState = mStates;
+			}
+		}
+	}
+
+	SDL_Rect getSrcRect()
+	{
+		SDL_Rect result;
+		result.x = mState * mWidth;
+		result.y = 0;
+		result.w = mWidth;
+		result.h = mHeight;
+
+		return result;
+	}
+
+private:
+	int mStates, mState, mWidth, mHeight;
+};
 
 class Game {
 public:
@@ -51,7 +109,7 @@ private:
 };
 
 Game::Game()
-:frameSkip(0u), running(0), window(NULL), renderer(NULL), background(0), orcs(0) {
+:frameSkip(0u), running(0), window(NULL), renderer(NULL), hero(3, 32, 32), background(0), orcs(0) {
 }
 
 Game::~Game() {
@@ -95,12 +153,12 @@ void Game::draw() {
 	src_rect.x = src_rect.y = 0;
 	src_rect.h = src_rect.w = 32;
 
-	// Render hero
+	//// Render hero
 	heroRect.x = hero.x;
 	heroRect.y = hero.y;
 	heroRect.w = 32;
 	heroRect.h = 32;
-	SDL_RenderCopy(renderer, orcs, &src_rect, &heroRect);
+	SDL_RenderCopy(renderer, orcs, &hero.getSrcRect(), &heroRect);
 	//fillRect(&heroRect, 255, 0, 0 );
 
 	SDL_RenderPresent(renderer);
@@ -182,8 +240,10 @@ void Game::run() {
 void Game::update() {
     if ( keys[SDLK_LEFT] ) {
         hero.x -= HERO_SPEED ;
+		hero.update_left();
     } else if ( keys[SDLK_RIGHT] ) {
         hero.x += HERO_SPEED ;
+		hero.update_right();
     } else if ( keys[SDLK_UP] ) {
         hero.y -= HERO_SPEED ;
     } else if ( keys[SDLK_DOWN] ) {
