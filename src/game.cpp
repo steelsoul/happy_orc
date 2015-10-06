@@ -19,8 +19,16 @@ enum {
 };
 
 class BaseSprite {
-public: int x, y;
-		BaseSprite() : x(0), y(0) {}
+public: Sint32 x, y;
+	BaseSprite() : x(0), y(0) {}
+	virtual void moveLeft()
+	{
+		x -= HERO_SPEED;
+	}
+	virtual void moveRight()
+	{
+		x += HERO_SPEED;
+	}
 };
 
 class Sprite: public BaseSprite {
@@ -43,6 +51,38 @@ public:
 	{
 	}
 
+	virtual void moveLeft()
+	{
+		x -= HERO_SPEED;
+		if (HERO_SPEED + 0 > x) 
+		{
+			x = HERO_SPEED + 0;
+		}
+		update_left();
+	}
+
+	virtual void moveRight()
+	{
+		x += HERO_SPEED;
+		if (DISPLAY_WIDTH < x + 32 - HERO_SPEED)
+		{
+			x = DISPLAY_WIDTH - 32;
+		}
+		update_right();
+	}
+
+	SDL_Rect getSrcRect()
+	{
+		SDL_Rect result;
+		result.x = mState * mWidth;
+		result.y = 0;
+		result.w = mWidth;
+		result.h = mHeight;
+
+		return result;
+	}
+
+protected:
 	void update_right()
 	{
 		if (x % 20 == 0)
@@ -65,17 +105,6 @@ public:
 				mState = mStates;
 			}
 		}
-	}
-
-	SDL_Rect getSrcRect()
-	{
-		SDL_Rect result;
-		result.x = mState * mWidth;
-		result.y = 0;
-		result.w = mWidth;
-		result.h = mHeight;
-
-		return result;
 	}
 
 private:
@@ -132,6 +161,8 @@ void Game::start() {
 
 	const char* orcimg = "Orcs.bmp";
 	loadorc(orcimg);
+
+	hero.y = static_cast<Sint32>(DISPLAY_HEIGHT*(1 - 0.2));
 
 	this->running = 1;
 	SDL_ShowWindow(window);
@@ -239,16 +270,18 @@ void Game::run() {
 
 void Game::update() {
     if ( keys[SDLK_LEFT] ) {
-        hero.x -= HERO_SPEED ;
-		hero.update_left();
+        //hero.x -= HERO_SPEED ;
+		hero.moveLeft();
+		//hero.update_left();
     } else if ( keys[SDLK_RIGHT] ) {
-        hero.x += HERO_SPEED ;
-		hero.update_right();
-    } else if ( keys[SDLK_UP] ) {
+        //hero.x += HERO_SPEED ;
+		hero.moveRight();
+		//hero.update_right();
+    } /*else if ( keys[SDLK_UP] ) {
         hero.y -= HERO_SPEED ;
     } else if ( keys[SDLK_DOWN] ) {
         hero.y += HERO_SPEED ;
-    }
+    }*/
 }
 
 void Game::onKeyDown( SDL_Event* evt ) {
