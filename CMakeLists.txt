@@ -34,7 +34,11 @@ set ( APP_NAME ho )
 # DEBUG|RELEASE|RELWITHDEBINFO|MINSIZEREL
 # выполняется установка через скрипты do_release.sh или do_debug.sh
 
-SET(SRC_LIST ${SRC_DIR}/game.cpp)
+SET(SRC_LIST 
+	${SRC_DIR}/game.cpp
+	${SRC_DIR}/CBaseSprite.cpp
+	${SRC_DIR}/CSprite.cpp
+	${SRC_DIR}/CGame.cpp)
 ADD_EXECUTABLE(${APP_NAME} ${SRC_LIST})
 TARGET_LINK_LIBRARIES(${APP_NAME} ${PROJECT_LIBS})
 
