@@ -9,23 +9,47 @@
 
 namespace happyorc {
 
-CBaseSprite::CBaseSprite()
-: x(0)
-, y(0)
+CBaseSprite::CBaseSprite(int x, int y, int w, int h, uint32_t s)
+: mx(x)
+, my(y)
+, mw(w)
+, mh(h)
+, ms(s)
 {
-
 }
 
 CBaseSprite::~CBaseSprite() {
 
 }
 
-void CBaseSprite::moveLeft() {
-	x -= HERO_SPEED;
+void CBaseSprite::setSpeed(uint32_t speed)
+{
+	ms = speed;
 }
 
-void CBaseSprite::moveRight() {
-	x += HERO_SPEED;
+void CBaseSprite::moveLeft()
+{
+	mx -= ms;
+}
+
+void CBaseSprite::moveRight()
+{
+	mx += ms;
+}
+
+void CBaseSprite::moveDown()
+{
+	my += ms;
+}
+
+void CBaseSprite::moveUp()
+{
+	my -= ms;
+}
+
+CBaseSprite::CRect CBaseSprite::getSrcRect() const
+{
+	return CRect(mx, my, mw, mh);
 }
 
 } /* namespace happyorc */

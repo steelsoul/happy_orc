@@ -33,11 +33,13 @@ set ( APP_NAME ho )
 # Возможные значения:
 # DEBUG|RELEASE|RELWITHDEBINFO|MINSIZEREL
 # выполняется установка через скрипты do_release.sh или do_debug.sh
+list( APPEND CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
 SET(SRC_LIST 
 	${SRC_DIR}/game.cpp
 	${SRC_DIR}/CBaseSprite.cpp
-	${SRC_DIR}/CSprite.cpp
+	${SRC_DIR}/COrcSprite.cpp
+	${SRC_DIR}/CHamSprite.cpp
 	${SRC_DIR}/CGame.cpp)
 ADD_EXECUTABLE(${APP_NAME} ${SRC_LIST})
 TARGET_LINK_LIBRARIES(${APP_NAME} ${PROJECT_LIBS})

@@ -8,19 +8,41 @@
 #ifndef SRC_CBASESPRITE_HPP_
 #define SRC_CBASESPRITE_HPP_
 
-#include "settings.hpp"
+#include <cstdint>
 
 namespace happyorc {
 
 class CBaseSprite {
 public:
 
-	CBaseSprite();
-	virtual void moveLeft();
-	virtual void moveRight();
+	struct CRect {
+		CRect(int x, int y, int w, int h)
+		: x(x), y(y), w(w), h(h) {}
+		int x, y, w, h;
+	};
+
+	explicit CBaseSprite(int x, int y, int w, int h, uint32_t s);
 	virtual ~CBaseSprite();
 
-	int x, y;
+	virtual void moveRight();
+	virtual void moveLeft();
+	virtual void moveUp();
+	virtual void moveDown();
+
+	void setX(int x) { mx = x; }
+	void setY(int y) { my = y; }
+
+	int getX() const {return mx; }
+	int getY() const {return my; }
+	int getW() const {return mw; }
+	int getH() const {return mh; }
+	uint32_t getSpeed() const { return ms; }
+
+	void setSpeed(uint32_t speed);
+	virtual CRect getSrcRect() const;
+private:
+	int mx, my, mw, mh;
+	uint32_t ms;
 };
 
 } /* namespace happyorc */

@@ -9,8 +9,9 @@
 #define SRC_CGAME_HPP_
 
 #include <SDL.h>
-#include "CSprite.hpp"
 #include <map>
+#include "COrcSprite.hpp"
+#include "CHamSprite.hpp"
 
 namespace happyorc {
 
@@ -20,7 +21,9 @@ public:
 	virtual ~CGame();
 
     void start();
-    void stop() ;
+private:
+
+    void stop();
     void draw();
     void fillRect(SDL_Rect* rc, int r, int g, int b );
     void fpsChanged( int fps );
@@ -29,16 +32,24 @@ public:
     void onKeyUp( SDL_Event* event );
     void run();
     void update();
-	void loadorc(const char* path);
+
+	void loadsprite(const char* path, SDL_Texture*&);
+	void setKeyColor(SDL_Surface*);
+
 private:
     std::map<int,int> keys;
     Uint32 frameSkip ;
     int running ;
+
     SDL_Window* window;
     SDL_Renderer* renderer;
-    happyorc::CSprite hero ;
+
     SDL_Texture* background;
 	SDL_Texture* orcs;
+	SDL_Texture* ham;
+
+    COrcSprite ahero;
+	CHamSprite aham;
 };
 
 } /* namespace happyorc */

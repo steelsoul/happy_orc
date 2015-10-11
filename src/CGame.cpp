@@ -9,18 +9,26 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <sstream>
+#include <cstdlib>
+#include <ctime>
+
+#include "settings.hpp"
 
 namespace happyorc {
 
 CGame::CGame()
-: frameSkip(0u)
+: keys()
+, frameSkip(0u)
 , running(0)
 , window(NULL)
 , renderer(NULL)
-, hero(3, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH)
-, background(0)
-, orcs(0)
+, background(NULL)
+, orcs(NULL)
+, ham(NULL)
+, ahero(0, 0, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH, 3)
+, aham(rand() % (DISPLAY_WIDTH - HAM_WIDTH), -HAM_WIDTH, HAM_WIDTH, HAM_HEIGHT, HAM_SPEED, DISPLAY_HEIGHT)
 {
+	srand(time(NULL));
 }
 
 CGame::~CGame() {
@@ -36,15 +44,26 @@ void CGame::start() {
 		return;
 	}
 	const char* filename = "forest_480x320.jpg";
+
 	background = IMG_LoadTexture(renderer, filename);
 	if (!background) {
 		fprintf(stderr, "Error: %s", SDL_GetError());
+		return;
 	}
 
-	const char* orcimg = "Orcs.bmp";
-	loadorc(orcimg);
+	loadsprite("Orcs.bmp", orcs);
+	if (!orcs) {
+		fprintf(stderr, "Error: %s", SDL_GetError());
+		return;
+	}
 
-	hero.y = static_cast<Sint32>(DISPLAY_HEIGHT*(1 - 0.2));
+	loadsprite("ham.bmp", ham);
+	if (!ham) {
+		fprintf(stderr, "Error: %s", SDL_GetError());
+		return;
+	}
+
+	ahero.setY(DISPLAY_HEIGHT*(1 - 0.2));
 
 	this->running = 1;
 	SDL_ShowWindow(window);
@@ -52,8 +71,8 @@ void CGame::start() {
 }
 
 void CGame::draw() {
-	SDL_Rect heroRect;
-	SDL_Rect srcRect;
+	SDL_Rect aDstRect;
+	SDL_Rect aSrcRect;
 
 	// Clear screen
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -64,18 +83,32 @@ void CGame::draw() {
 	}
 
 	//// Render hero
-	heroRect.x = hero.x;
-	heroRect.y = hero.y;
-	heroRect.w = ORC_WIDTH;
-	heroRect.h = ORC_HEIGHT;
+	aDstRect.x = ahero.getX();
+	aDstRect.y = ahero.getY();
+	aDstRect.w = ORC_WIDTH;
+	aDstRect.h = ORC_HEIGHT;
 
-    CSprite::CRect spriteSrc = hero.getSrcRect();
-    srcRect.x = spriteSrc.x;
-    srcRect.y = spriteSrc.y;
-    srcRect.w = spriteSrc.w;
-    srcRect.h = spriteSrc.h;
+    CBaseSprite::CRect spriteSrc = ahero.getSrcRect();
+    aSrcRect.x = spriteSrc.x;
+    aSrcRect.y = spriteSrc.y;
+    aSrcRect.w = spriteSrc.w;
+    aSrcRect.h = spriteSrc.h;
 
-	SDL_RenderCopy(renderer, orcs, &srcRect, &heroRect);
+	SDL_RenderCopy(renderer, orcs, &aSrcRect, &aDstRect);
+
+	/// Render ham
+	aDstRect.x = aham.getX();
+	aDstRect.y = aham.getY();
+	aDstRect.w = HAM_WIDTH;
+	aDstRect.h = HAM_HEIGHT;
+
+	spriteSrc = aham.getSrcRect();
+    aSrcRect.x = spriteSrc.x;
+    aSrcRect.y = spriteSrc.y;
+    aSrcRect.w = spriteSrc.w;
+    aSrcRect.h = spriteSrc.h;
+
+	SDL_RenderCopy(renderer, ham, &aSrcRect, &aDstRect);
 
 	SDL_RenderPresent(renderer);
 }
@@ -95,6 +128,9 @@ void CGame::stop() {
 	if (NULL != orcs) {
 		SDL_DestroyTexture(orcs);
 	}
+	if (NULL != ham) {
+		SDL_DestroyTexture(ham);
+	}
     SDL_Quit() ;
 }
 
@@ -110,6 +146,7 @@ void CGame::fpsChanged( int fps ) {
 }
 
 void CGame::onQuit() {
+	fprintf(stderr, "Good bye!\n");
     running = 0 ;
 }
 
@@ -156,17 +193,25 @@ void CGame::run() {
 void CGame::update() {
     if ( keys[SDLK_LEFT] ) {
         //hero.x -= HERO_SPEED ;
-		hero.moveLeft();
+		ahero.moveLeft();
 		//hero.update_left();
     } else if ( keys[SDLK_RIGHT] ) {
         //hero.x += HERO_SPEED ;
-		hero.moveRight();
+		ahero.moveRight();
 		//hero.update_right();
     } /*else if ( keys[SDLK_UP] ) {
         hero.y -= HERO_SPEED ;
     } else if ( keys[SDLK_DOWN] ) {
         hero.y += HERO_SPEED ;
     }*/
+
+    fprintf(stderr, "ham: %d %d\n", aham.getX(), aham.getY());
+    aham.moveDown();
+    if (aham.getY() + HAM_WIDTH >= DISPLAY_HEIGHT*0.9)
+    {
+    	aham.setX(rand() % (DISPLAY_WIDTH - HAM_WIDTH));
+    	aham.setY(-HAM_WIDTH);
+    }
 }
 
 void CGame::onKeyDown( SDL_Event* evt ) {
@@ -177,36 +222,39 @@ void CGame::onKeyUp( SDL_Event* evt ) {
     keys[ evt->key.keysym.sym ] = 0 ;
 }
 
-void CGame::loadorc(const char* path)
+void CGame::setKeyColor(SDL_Surface* surface)
 {
-	SDL_Surface *temp;
-	temp = SDL_LoadBMP(path);
-	if (temp == NULL) {
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't load %s: %s", path, SDL_GetError());
-		// very bad!
-	}
-	/* Set transparent pixel as the pixel at (0,0) */
-	if (temp->format->palette) {
-		SDL_SetColorKey(temp, 1, *(Uint8 *)temp->pixels);
-	}
-	else {
-		switch (temp->format->BitsPerPixel) {
+	if (surface->format->palette) {
+		SDL_SetColorKey(surface, 1, *(Uint8 *)surface->pixels);
+	} else {
+		switch (surface->format->BitsPerPixel) {
 		case 15:
-			SDL_SetColorKey(temp, 1, (*(Uint16 *)temp->pixels) & 0x00007FFF);
+			SDL_SetColorKey(surface, 1, (*(Uint16 *)surface->pixels) & 0x00007FFF);
 			break;
 		case 16:
-			SDL_SetColorKey(temp, 1, *(Uint16 *)temp->pixels);
+			SDL_SetColorKey(surface, 1, *(Uint16 *)surface->pixels);
 			break;
 		case 24:
-			SDL_SetColorKey(temp, 1, (*(Uint32 *)temp->pixels) & 0x00FFFFFF);
+			SDL_SetColorKey(surface, 1, (*(Uint32 *)surface->pixels) & 0x00FFFFFF);
 			break;
 		case 32:
-			SDL_SetColorKey(temp, 1, *(Uint32 *)temp->pixels);
+			SDL_SetColorKey(surface, 1, *(Uint32 *)surface->pixels);
 			break;
 		}
 	}
-	orcs = SDL_CreateTextureFromSurface(renderer, temp);
-	SDL_FreeSurface(temp);
+}
+
+void CGame::loadsprite(const char* path, SDL_Texture*& texture)
+{
+	SDL_Surface* temp = SDL_LoadBMP(path);
+	if (temp)
+	{
+		setKeyColor(temp);
+		texture = SDL_CreateTextureFromSurface(renderer, temp);
+		SDL_FreeSurface(temp);
+	} else {
+		fprintf(stderr, "Error: %s\n", SDL_GetError());
+	}
 }
 
 } /* namespace happyorc */

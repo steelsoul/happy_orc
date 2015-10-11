@@ -1,7 +1,7 @@
 
 #include "CBaseSprite.hpp"
-#include "CSprite.hpp"
 #include "CGame.hpp"
+#include "COrcSprite.hpp"
 
 
 #ifdef _WIN32
