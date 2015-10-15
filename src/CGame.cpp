@@ -29,6 +29,7 @@ CGame::CGame()
 , aham(rand() % (DISPLAY_WIDTH - HAM_WIDTH), -HAM_WIDTH, HAM_WIDTH, HAM_HEIGHT, HAM_SPEED, DISPLAY_HEIGHT)
 {
 	srand(time(NULL));
+	aham.setX(rand() % (DISPLAY_WIDTH - HAM_WIDTH));
 }
 
 CGame::~CGame() {
