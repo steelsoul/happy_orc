@@ -113,6 +113,18 @@ double CVector2::dist(double x, double y) const
 	return dist(CVector2(x,y));
 }
 
+double CVector2::dist2(const CVector2& other) const
+{
+	double distX = mx - other.mx;
+	double distY = my - other.my;
+	return distX * distX + distY * distY;
+}
+
+double CVector2::dist2(double x, double y) const
+{
+	return dist2(CVector2(x,y));
+}
+
 
 
 } /* namespace math */

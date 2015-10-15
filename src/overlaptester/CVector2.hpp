@@ -5,8 +5,8 @@
  *      Author: alexander
  */
 
-#ifndef SRC_CVECTOR2_HPP_
-#define SRC_CVECTOR2_HPP_
+#ifndef SRC_OVERLAPTESTER_CVECTOR2_HPP_
+#define SRC_OVERLAPTESTER_CVECTOR2_HPP_
 
 #include <cmath>
 
@@ -34,13 +34,15 @@ public:
 	CVector2& rotate(double angle);
 	double dist(const CVector2& other) const ;
 	double dist(double x, double y) const;
+	double dist2(const CVector2& other) const;
+	double dist2(double x, double y) const;
 
 	virtual ~CVector2();
-private:
+public:
 	double mx, my;
 };
 
 } /* namespace math */
 } /* namespace framework */
 
-#endif /* SRC_CVECTOR2_HPP_ */
+#endif /* SRC_OVERLAPTESTER_CVECTOR2_HPP_ */

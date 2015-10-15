@@ -5,18 +5,18 @@
  *      Author: alexander
  */
 
-#include "src/CCIrcle.hpp"
+#include "CCircle.hpp"
 
 namespace framework {
 namespace math {
 
-CCIrcle::CCIrcle() {
-	// TODO Auto-generated constructor stub
-
+CCircle::CCircle(double x, double y, double radius)
+: mcenter(x,y)
+, mradius(radius)
+{
 }
 
-CCIrcle::~CCIrcle() {
-	// TODO Auto-generated destructor stub
+CCircle::~CCircle() {
 }
 
 } /* namespace math */

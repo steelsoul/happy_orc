@@ -11,6 +11,8 @@ PKG_CHECK_MODULES(SDL2_IMG SDL2_image)
 # в значение имени каталога с проектом.
 project ( happy_orc )
 
+add_subdirectory("${PROJECT_SOURCE_DIR}/src/overlaptester")
+
 set ( SRC_DIR ${PROJECT_SOURCE_DIR}/src )
 
 set (PROJECT_INCLUDE_DIRS
@@ -20,6 +22,7 @@ set (PROJECT_INCLUDE_DIRS
 set (PROJECT_LIBS
     ${SDL2_LIBRARIES}
     ${SDL2_IMG_LIBRARIES}
+    overlaptester
 )
 
 include_directories(${PROJECT_INCLUDE_DIRS})
