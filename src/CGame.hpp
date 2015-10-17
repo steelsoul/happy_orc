@@ -17,11 +17,19 @@
 namespace happyorc {
 
 class CGame {
+	struct MasterData {
+		MasterData()
+		: direction(2), dropham(false)
+		{}
+		int direction;
+		bool dropham;
+	};
 public:
 	CGame();
 	virtual ~CGame();
 
     void start();
+    void startTimer();
 private:
 
     void stop();
@@ -40,6 +48,7 @@ private:
 	void drawScore();
 
 	void checkCollisions();
+	void onLoose();
 
 private:
     std::map<int,int> keys;
@@ -59,6 +68,8 @@ private:
 
     COrcSprite ahero;
 	CHamSprite aham;
+	COrcSprite amaster;
+	MasterData masterdata;
 };
 
 } /* namespace happyorc */

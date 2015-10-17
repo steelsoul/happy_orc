@@ -19,6 +19,16 @@
 
 namespace happyorc {
 
+Uint32 my_timer_fn(Uint32 interval, void *param)
+{
+//	fprintf(stderr, "== on Time () ==\n");
+	if (param) {
+		CGame* game = reinterpret_cast<CGame*>(param);
+		game->startTimer();
+	}
+	return 0u;
+}
+
 CGame::CGame()
 : keys()
 , frameSkip(0u)
@@ -30,17 +40,36 @@ CGame::CGame()
 , ham(NULL)
 , mfont(NULL)
 , mscore(NULL)
+, mscorepoints(0)
 , ahero(0, 0, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH, 3)
 , aham(rand() % (DISPLAY_WIDTH - HAM_WIDTH), -HAM_WIDTH, HAM_WIDTH, HAM_HEIGHT, HAM_SPEED, DISPLAY_HEIGHT)
-, mscorepoints(0)
+, amaster(rand() % (DISPLAY_WIDTH - ORC_WIDTH), 0, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH, 3)
+, masterdata()
 {
 	srand(time(NULL));
 	aham.setX(rand() % (DISPLAY_WIDTH - HAM_WIDTH));
 }
 
+void CGame::startTimer() {
+	SDL_TimerID tid = SDL_AddTimer(500 + rand() % 800, my_timer_fn, this);
+//	fprintf(stderr, "Start timer with ID %d\n", static_cast<int>(tid));
+
+	/* update direction of master orc */
+	masterdata.direction = rand() % 3;
+	if (!masterdata.dropham) {
+		if (rand() % 2 == 0) {
+			masterdata.dropham = true;
+	    	aham.setX(amaster.getX() + (ORC_SPRITE_WIDTH - HAM_SPRITE_WIDTH)/2);
+	    	aham.setY(amaster.getY() + (ORC_SPRITE_HEIGHT - HAM_SPRITE_HEIGHT)/2);
+		}
+	}
+//	fprintf(stdout, "master direction : %d\n", masterdata.direction);
+}
+
 CGame::~CGame() {
     this->stop();
 }
+
 
 void CGame::start() {
 	int flags = SDL_WINDOW_HIDDEN/* | SDL_WINDOW_FULLSCREEN*/ ;
@@ -93,9 +122,13 @@ void CGame::start() {
 		TTF_SetFontHinting(mfont, hinting);
 	}
 
+
+
 	ahero.setY(static_cast<int>(DISPLAY_HEIGHT*(1 - 0.2)));
 
 	this->running = 1;
+	startTimer();
+
 	SDL_ShowWindow(window);
 	run();
 }
@@ -126,20 +159,36 @@ void CGame::draw() {
 
 	SDL_RenderCopy(renderer, orcs, &aSrcRect, &aDstRect);
 
-	/// Render ham
-	aDstRect.x = aham.getX();
-	aDstRect.y = aham.getY();
-	aDstRect.w = HAM_WIDTH;
-	aDstRect.h = HAM_HEIGHT;
+	/// Render master
+	aDstRect.x = amaster.getX();
+	aDstRect.y = amaster.getY();
+	aDstRect.w = ORC_WIDTH;
+	aDstRect.h = ORC_HEIGHT;
 
-	spriteSrc = aham.getSrcRect();
-	aSrcRect.x = static_cast<int>(spriteSrc.mLowerLeft.mx);
-	aSrcRect.y = static_cast<int>(spriteSrc.mLowerLeft.my);
+    spriteSrc = amaster.getSrcRect();
+    aSrcRect.x = static_cast<int>(spriteSrc.mLowerLeft.mx);
+	aSrcRect.y = static_cast<int>(spriteSrc.mLowerLeft.my) + ORC_SPRITE_HEIGHT;
 	aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
 	aSrcRect.h = static_cast<int>(spriteSrc.mheight);
 
-	SDL_RenderCopy(renderer, ham, &aSrcRect, &aDstRect);
+	SDL_RenderCopy(renderer, orcs, &aSrcRect, &aDstRect);
 
+	/// Render ham
+	if (masterdata.dropham)
+	{
+		aDstRect.x = aham.getX();
+		aDstRect.y = aham.getY();
+		aDstRect.w = HAM_WIDTH;
+		aDstRect.h = HAM_HEIGHT;
+
+		spriteSrc = aham.getSrcRect();
+		aSrcRect.x = static_cast<int>(spriteSrc.mLowerLeft.mx);
+		aSrcRect.y = static_cast<int>(spriteSrc.mLowerLeft.my);
+		aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
+		aSrcRect.h = static_cast<int>(spriteSrc.mheight);
+
+		SDL_RenderCopy(renderer, ham, &aSrcRect, &aDstRect);
+	}
 	drawScore();
 
 	SDL_RenderPresent(renderer);
@@ -160,8 +209,8 @@ void CGame::drawScore() {
 
 	SDL_Rect textsource;
 
-	textsource.x = 4; 
-	textsource.y = 4; 
+	textsource.x = 0;
+	textsource.y = 0;
 	textsource.w = tempsurf->w; 
 	textsource.h = tempsurf->h;
 
@@ -191,6 +240,12 @@ void CGame::stop() {
 	if (NULL != ham) {
 		SDL_DestroyTexture(ham);
 	}
+	if (NULL != mscore) {
+		SDL_DestroyTexture(mscore);
+	}
+
+	TTF_CloseFont(mfont);
+	TTF_Quit();
     SDL_Quit() ;
 }
 
@@ -206,7 +261,7 @@ void CGame::fpsChanged( int fps ) {
 }
 
 void CGame::onQuit() {
-	fprintf(stderr, "Good bye!\n");
+	fprintf(stdout, "Good bye!\n");
     running = 0 ;
 }
 
@@ -259,19 +314,26 @@ void CGame::update() {
         //hero.x += HERO_SPEED ;
 		ahero.moveRight();
 		//hero.update_right();
-    } /*else if ( keys[SDLK_UP] ) {
-        hero.y -= HERO_SPEED ;
-    } else if ( keys[SDLK_DOWN] ) {
-        hero.y += HERO_SPEED ;
-    }*/
+    }
+//    fprintf(stderr, "ham: %d %d\n", aham.getX(), aham.getY());
 
-    fprintf(stderr, "ham: %d %d\n", aham.getX(), aham.getY());
-    aham.moveDown();
+    if (masterdata.direction == 0) {
+    	amaster.moveLeft();
+    } else if (masterdata.direction == 1) {
+    	amaster.moveRight();
+    }
+
+    if (masterdata.dropham) {
+    	aham.moveDown();
+    }
+
     if (aham.getY() + HAM_WIDTH >= DISPLAY_HEIGHT*0.9)
     {
-    	aham.setX(rand() % (DISPLAY_WIDTH - HAM_WIDTH));
-    	aham.setY(-HAM_WIDTH);
+    	masterdata.dropham = false;
+    	onLoose();
     }
+
+    checkCollisions();
 }
 
 void CGame::onKeyDown( SDL_Event* evt ) {
@@ -321,13 +383,22 @@ void CGame::checkCollisions() {
 	using framework::math::COverlapTester;
 	if (COverlapTester::overlapRectangles(ahero.getBound(), aham.getBound()))
 	{
-		fprintf(stderr, "Overlaps\n");
+//		fprintf(stderr, "Overlaps\n");
 		mscorepoints += 1;
 
 		// reset aham positions
-		aham.setX(rand() % (DISPLAY_WIDTH - HAM_WIDTH));
 		aham.setY(-HAM_WIDTH);
+		masterdata.dropham = false;
+
+		if (mscorepoints % 20 == 0 && aham.getSpeed() < 10) {
+			aham.setSpeed(aham.getSpeed() + static_cast<uint32_t>(mscorepoints / 20));
+		}
 	}
+}
+
+void CGame::onLoose() {
+	running = 0;
+	fprintf(stdout, "You loose with %d PTS. Have a nice day!\n", mscorepoints);
 }
 
 } /* namespace happyorc */
