@@ -21,7 +21,7 @@ public:
 	void moveRight() override;
 	void moveLeft() override;
 
-	CRect getSrcRect() const override;
+	CRectangle getSrcRect() const override;
 protected:
 	void update_left();
 	void update_right();

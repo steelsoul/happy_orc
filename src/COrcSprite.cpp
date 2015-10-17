@@ -77,9 +77,9 @@ void COrcSprite::update_left()
 }
 
 
-CBaseSprite::CRect COrcSprite::getSrcRect() const
+CRectangle COrcSprite::getSrcRect() const
 {
-	return CRect(mState * ORC_SPRITE_WIDTH, 0,
+	return CRectangle(mState * ORC_SPRITE_WIDTH, 0,
 			ORC_SPRITE_WIDTH, ORC_SPRITE_HEIGHT);
 }
 

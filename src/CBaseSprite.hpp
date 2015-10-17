@@ -9,18 +9,15 @@
 #define SRC_CBASESPRITE_HPP_
 
 #include <cstdint>
+#include "overlaptester/CRectangle.hpp"
 
 namespace happyorc {
 
+using framework::math::CRectangle;
+
 class CBaseSprite {
 public:
-
-	struct CRect {
-		CRect(int x, int y, int w, int h)
-		: x(x), y(y), w(w), h(h) {}
-		int x, y, w, h;
-	};
-
+	
 	explicit CBaseSprite(int x, int y, int w, int h, uint32_t s);
 	virtual ~CBaseSprite();
 
@@ -29,8 +26,8 @@ public:
 	virtual void moveUp();
 	virtual void moveDown();
 
-	void setX(int x) { mx = x; }
-	void setY(int y) { my = y; }
+	void setX(int x);
+	void setY(int y);
 
 	int getX() const {return mx; }
 	int getY() const {return my; }
@@ -39,9 +36,11 @@ public:
 	uint32_t getSpeed() const { return ms; }
 
 	void setSpeed(uint32_t speed);
-	virtual CRect getSrcRect() const;
+	virtual CRectangle getSrcRect() const;
+	virtual CRectangle getBound() const;
 private:
 	int mx, my, mw, mh;
+	CRectangle mBound;
 	uint32_t ms;
 };
 

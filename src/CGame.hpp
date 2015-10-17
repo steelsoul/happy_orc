@@ -39,6 +39,8 @@ private:
 
 	void drawScore();
 
+	void checkCollisions();
+
 private:
     std::map<int,int> keys;
     Uint32 frameSkip ;
@@ -53,7 +55,7 @@ private:
 
 	TTF_Font* mfont;
 	SDL_Texture* mscore;
-	SDL_Rect mtextsource;
+	int mscorepoints;
 
     COrcSprite ahero;
 	CHamSprite aham;

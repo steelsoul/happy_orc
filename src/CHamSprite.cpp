@@ -26,9 +26,9 @@ void CHamSprite::moveDown()
 	CBaseSprite::moveDown();
 }
 
-CBaseSprite::CRect CHamSprite::getSrcRect() const
+CRectangle CHamSprite::getSrcRect() const
 {
-	return CRect(0, 0, HAM_SPRITE_WIDTH, HAM_SPRITE_HEIGHT);
+	return CRectangle(0, 0, HAM_SPRITE_WIDTH, HAM_SPRITE_HEIGHT);
 }
 
 } /* namespace happyorc */

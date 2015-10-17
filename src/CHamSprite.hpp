@@ -19,7 +19,7 @@ public:
 	virtual ~CHamSprite();
 
 	void moveDown() override;
-	CRect getSrcRect() const override;
+	CRectangle getSrcRect() const override;
 
 private:
 	int mDisplayHeight;

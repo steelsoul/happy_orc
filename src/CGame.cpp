@@ -15,6 +15,8 @@
 
 #include "settings.hpp"
 
+#include "overlaptester/COverlapTester.hpp"
+
 namespace happyorc {
 
 CGame::CGame()
@@ -30,6 +32,7 @@ CGame::CGame()
 , mscore(NULL)
 , ahero(0, 0, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH, 3)
 , aham(rand() % (DISPLAY_WIDTH - HAM_WIDTH), -HAM_WIDTH, HAM_WIDTH, HAM_HEIGHT, HAM_SPEED, DISPLAY_HEIGHT)
+, mscorepoints(0)
 {
 	srand(time(NULL));
 	aham.setX(rand() % (DISPLAY_WIDTH - HAM_WIDTH));
@@ -89,6 +92,7 @@ void CGame::start() {
 		TTF_SetFontKerning(mfont, kerning);
 		TTF_SetFontHinting(mfont, hinting);
 	}
+
 	ahero.setY(static_cast<int>(DISPLAY_HEIGHT*(1 - 0.2)));
 
 	this->running = 1;
@@ -114,11 +118,11 @@ void CGame::draw() {
 	aDstRect.w = ORC_WIDTH;
 	aDstRect.h = ORC_HEIGHT;
 
-    CBaseSprite::CRect spriteSrc = ahero.getSrcRect();
-    aSrcRect.x = spriteSrc.x;
-    aSrcRect.y = spriteSrc.y;
-    aSrcRect.w = spriteSrc.w;
-    aSrcRect.h = spriteSrc.h;
+    CRectangle spriteSrc = ahero.getSrcRect();
+    aSrcRect.x = static_cast<int>(spriteSrc.mLowerLeft.mx);
+	aSrcRect.y = static_cast<int>(spriteSrc.mLowerLeft.my);
+	aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
+	aSrcRect.h = static_cast<int>(spriteSrc.mheight);
 
 	SDL_RenderCopy(renderer, orcs, &aSrcRect, &aDstRect);
 
@@ -129,10 +133,10 @@ void CGame::draw() {
 	aDstRect.h = HAM_HEIGHT;
 
 	spriteSrc = aham.getSrcRect();
-    aSrcRect.x = spriteSrc.x;
-    aSrcRect.y = spriteSrc.y;
-    aSrcRect.w = spriteSrc.w;
-    aSrcRect.h = spriteSrc.h;
+	aSrcRect.x = static_cast<int>(spriteSrc.mLowerLeft.mx);
+	aSrcRect.y = static_cast<int>(spriteSrc.mLowerLeft.my);
+	aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
+	aSrcRect.h = static_cast<int>(spriteSrc.mheight);
 
 	SDL_RenderCopy(renderer, ham, &aSrcRect, &aDstRect);
 
@@ -143,7 +147,9 @@ void CGame::draw() {
 
 void CGame::drawScore() {
 	SDL_Color textColor = { 0xFF, 0x00, 0x00, 0 };
-	SDL_Surface * tempsurf = TTF_RenderText_Solid(mfont, "0 PTS", textColor);
+	std::stringstream ss;
+	ss << mscorepoints << " PTS";
+	SDL_Surface * tempsurf = TTF_RenderText_Solid(mfont, ss.str().c_str(), textColor);
 
 	if (mscore) {
 		SDL_DestroyTexture(mscore);
@@ -152,16 +158,18 @@ void CGame::drawScore() {
 
 	mscore = SDL_CreateTextureFromSurface(renderer, tempsurf);
 
-	mtextsource.x = 4; 
-	mtextsource.y = 4; 
-	mtextsource.w = tempsurf->w; 
-	mtextsource.h = tempsurf->h;
+	SDL_Rect textsource;
+
+	textsource.x = 4; 
+	textsource.y = 4; 
+	textsource.w = tempsurf->w; 
+	textsource.h = tempsurf->h;
 
 	SDL_FreeSurface(tempsurf);
 
 	SDL_Rect dst;
-	dst.x = 10; dst.y = 50; dst.w = mtextsource.w; dst.h = mtextsource.h;
-	SDL_RenderCopy(renderer, mscore, &mtextsource, &dst);
+	dst.x = 10; dst.y = 50; dst.w = textsource.w; dst.h = textsource.h;
+	SDL_RenderCopy(renderer, mscore, &textsource, &dst);
 }
 
 
@@ -306,6 +314,19 @@ void CGame::loadsprite(const char* path, SDL_Texture*& texture)
 		SDL_FreeSurface(temp);
 	} else {
 		fprintf(stderr, "Error: %s\n", SDL_GetError());
+	}
+}
+
+void CGame::checkCollisions() {
+	using framework::math::COverlapTester;
+	if (COverlapTester::overlapRectangles(ahero.getBound(), aham.getBound()))
+	{
+		fprintf(stderr, "Overlaps\n");
+		mscorepoints += 1;
+
+		// reset aham positions
+		aham.setX(rand() % (DISPLAY_WIDTH - HAM_WIDTH));
+		aham.setY(-HAM_WIDTH);
 	}
 }
 
