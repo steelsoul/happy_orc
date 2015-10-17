@@ -66,7 +66,7 @@ CVector2& CVector2::mul(const double scalar)
 
 double CVector2::len() const
 {
-	return std::sqrt(mx*mx + my*my);
+	return /*std::*/SDL_sqrt(mx*mx + my*my);
 }
 
 CVector2& CVector2::nor()
@@ -81,7 +81,7 @@ CVector2& CVector2::nor()
 
 double CVector2::angle() const
 {
-	double angle = atan2(my, mx) * TO_DEGREES;
+	double angle = SDL_atan2(my, mx) * TO_DEGREES;
 	if (angle < 0) angle += 360;
 	return angle;
 }
@@ -89,11 +89,11 @@ double CVector2::angle() const
 CVector2& CVector2::rotate(double angle)
 {
 	double rad = angle * TO_RADIANS;
-	double cos = std::cos(rad);
-	double sin = std::sin(rad);
+	double acos = /*std::*/SDL_cos(rad);
+	double asin = /*std::*/SDL_sin(rad);
 
-	double newX = mx * cos - my * sin;
-	double newY = mx * sin + my * cos;
+	double newX = mx * acos - my * asin;
+	double newY = mx * asin + my * acos;
 
 	mx = newX;
 	my = newY;
@@ -105,7 +105,7 @@ double CVector2::dist(const CVector2& other) const
 {
 	double distX = mx - other.mx;
 	double distY = my - other.my;
-	return std::sqrt(distX * distX + distY * distY);
+	return /*std::*/SDL_sqrt(distX * distX + distY * distY);
 }
 
 double CVector2::dist(double x, double y) const

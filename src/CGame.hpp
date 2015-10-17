@@ -9,6 +9,7 @@
 #define SRC_CGAME_HPP_
 
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <map>
 #include "COrcSprite.hpp"
 #include "CHamSprite.hpp"
@@ -47,6 +48,8 @@ private:
     SDL_Texture* background;
 	SDL_Texture* orcs;
 	SDL_Texture* ham;
+
+	//TTF_Font* mfont;
 
     COrcSprite ahero;
 	CHamSprite aham;

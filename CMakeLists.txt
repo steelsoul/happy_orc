@@ -4,6 +4,7 @@ cmake_minimum_required ( VERSION 2.6 )
 FIND_PACKAGE(PkgConfig)
 PKG_CHECK_MODULES(SDL2 sdl2)
 PKG_CHECK_MODULES(SDL2_IMG SDL2_image)
+PKG_CHECK_MODULES(SDL2_TTF SDL2_ttf)
 
 # Укажите здесь имя вашего проекта.
 # Учитываете установку переменных 
@@ -18,10 +19,12 @@ set ( SRC_DIR ${PROJECT_SOURCE_DIR}/src )
 set (PROJECT_INCLUDE_DIRS
     ${SDL2_INCLUDE_DIRS}
     ${SDL2_IMG_INCLUDE_DIRS}
+	${SDL2_TTF_INCLUDE_DIRS}
 )
 set (PROJECT_LIBS
     ${SDL2_LIBRARIES}
     ${SDL2_IMG_LIBRARIES}
+	${SDL2_TTF_LIBRARIES}
     overlaptester
 )
 

@@ -8,6 +8,7 @@
 #include "CGame.hpp"
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
@@ -39,6 +40,12 @@ CGame::~CGame() {
 void CGame::start() {
 	int flags = SDL_WINDOW_HIDDEN/* | SDL_WINDOW_FULLSCREEN*/ ;
 	if (SDL_Init(SDL_INIT_EVERYTHING)) {
+		fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
+		return;
+	}
+	/* Initialize the TTF library */
+	if (TTF_Init() < 0) {
+		fprintf(stderr, "Couldn't initialize TTF: %s\n", SDL_GetError());
 		return;
 	}
 	if (SDL_CreateWindowAndRenderer(DISPLAY_WIDTH, DISPLAY_HEIGHT, flags, &window, &renderer)) {
@@ -64,7 +71,7 @@ void CGame::start() {
 		return;
 	}
 
-	ahero.setY(DISPLAY_HEIGHT*(1 - 0.2));
+	ahero.setY(static_cast<int>(DISPLAY_HEIGHT*(1 - 0.2)));
 
 	this->running = 1;
 	SDL_ShowWindow(window);

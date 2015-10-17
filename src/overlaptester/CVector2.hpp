@@ -8,7 +8,7 @@
 #ifndef SRC_OVERLAPTESTER_CVECTOR2_HPP_
 #define SRC_OVERLAPTESTER_CVECTOR2_HPP_
 
-#include <cmath>
+#include <SDL_stdinc.h>
 
 namespace framework {
 namespace math {
