@@ -37,6 +37,8 @@ private:
 	void loadsprite(const char* path, SDL_Texture*&);
 	void setKeyColor(SDL_Surface*);
 
+	void drawScore();
+
 private:
     std::map<int,int> keys;
     Uint32 frameSkip ;
@@ -49,7 +51,9 @@ private:
 	SDL_Texture* orcs;
 	SDL_Texture* ham;
 
-	//TTF_Font* mfont;
+	TTF_Font* mfont;
+	SDL_Texture* mscore;
+	SDL_Rect mtextsource;
 
     COrcSprite ahero;
 	CHamSprite aham;

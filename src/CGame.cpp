@@ -26,6 +26,8 @@ CGame::CGame()
 , background(NULL)
 , orcs(NULL)
 , ham(NULL)
+, mfont(NULL)
+, mscore(NULL)
 , ahero(0, 0, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH, 3)
 , aham(rand() % (DISPLAY_WIDTH - HAM_WIDTH), -HAM_WIDTH, HAM_WIDTH, HAM_HEIGHT, HAM_SPEED, DISPLAY_HEIGHT)
 {
@@ -51,9 +53,8 @@ void CGame::start() {
 	if (SDL_CreateWindowAndRenderer(DISPLAY_WIDTH, DISPLAY_HEIGHT, flags, &window, &renderer)) {
 		return;
 	}
-	const char* filename = "forest_480x320.jpg";
 
-	background = IMG_LoadTexture(renderer, filename);
+	background = IMG_LoadTexture(renderer, "forest_480x320.jpg");
 	if (!background) {
 		fprintf(stderr, "Error: %s", SDL_GetError());
 		return;
@@ -71,6 +72,23 @@ void CGame::start() {
 		return;
 	}
 
+	mfont = TTF_OpenFont("Effinground.ttf", 30);
+	if (!mfont) {
+		fprintf(stderr, "Error: %s", SDL_GetError());
+		return;
+	}
+
+	{
+		int renderStyle = TTF_STYLE_NORMAL | TTF_STYLE_BOLD;
+		int hinting = TTF_HINTING_NORMAL;
+		int outline = 0;
+		int kerning = 0;
+
+		TTF_SetFontStyle(mfont, renderStyle);
+		TTF_SetFontOutline(mfont, outline);
+		TTF_SetFontKerning(mfont, kerning);
+		TTF_SetFontHinting(mfont, hinting);
+	}
 	ahero.setY(static_cast<int>(DISPLAY_HEIGHT*(1 - 0.2)));
 
 	this->running = 1;
@@ -118,8 +136,34 @@ void CGame::draw() {
 
 	SDL_RenderCopy(renderer, ham, &aSrcRect, &aDstRect);
 
+	drawScore();
+
 	SDL_RenderPresent(renderer);
 }
+
+void CGame::drawScore() {
+	SDL_Color textColor = { 0xFF, 0x00, 0x00, 0 };
+	SDL_Surface * tempsurf = TTF_RenderText_Solid(mfont, "0 PTS", textColor);
+
+	if (mscore) {
+		SDL_DestroyTexture(mscore);
+		mscore = NULL;
+	}
+
+	mscore = SDL_CreateTextureFromSurface(renderer, tempsurf);
+
+	mtextsource.x = 4; 
+	mtextsource.y = 4; 
+	mtextsource.w = tempsurf->w; 
+	mtextsource.h = tempsurf->h;
+
+	SDL_FreeSurface(tempsurf);
+
+	SDL_Rect dst;
+	dst.x = 10; dst.y = 50; dst.w = mtextsource.w; dst.h = mtextsource.h;
+	SDL_RenderCopy(renderer, mscore, &mtextsource, &dst);
+}
+
 
 void CGame::stop() {
     if (NULL != renderer) {
