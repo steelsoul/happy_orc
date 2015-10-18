@@ -18,7 +18,7 @@ public:
 			int dh);
 	virtual ~CHamSprite();
 
-	void moveDown() override;
+	void moveDown(double deltaTime) override;
 	CRectangle getSrcRect() const override;
 
 private:

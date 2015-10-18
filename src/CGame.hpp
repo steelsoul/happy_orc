@@ -40,7 +40,7 @@ private:
     void onKeyDown( SDL_Event* event );
     void onKeyUp( SDL_Event* event );
     void run();
-    void update();
+    void update(double deltaTime);
 
 	void loadsprite(const char* path, SDL_Texture*&);
 	void setKeyColor(SDL_Surface*);

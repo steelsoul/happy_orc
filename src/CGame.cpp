@@ -287,7 +287,7 @@ void CGame::run() {
         timeElapsed = (now=SDL_GetTicks()) - past ;
         if ( timeElapsed >= UPDATE_INTERVAL  ) {
             past = now ;
-            update();
+            update(timeElapsed/10.0);
             if ( framesSkipped++ >= frameSkip ) {
                 draw();
                 ++fps ;
@@ -305,26 +305,27 @@ void CGame::run() {
     }
 }
 
-void CGame::update() {
+void CGame::update(double deltaTime) {
+	fprintf(stderr, "dt: %04f\n", deltaTime);
     if ( keys[SDLK_LEFT] ) {
         //hero.x -= HERO_SPEED ;
-		ahero.moveLeft();
+		ahero.moveLeft(deltaTime);
 		//hero.update_left();
     } else if ( keys[SDLK_RIGHT] ) {
         //hero.x += HERO_SPEED ;
-		ahero.moveRight();
+		ahero.moveRight(deltaTime);
 		//hero.update_right();
     }
 //    fprintf(stderr, "ham: %d %d\n", aham.getX(), aham.getY());
 
     if (masterdata.direction == 0) {
-    	amaster.moveLeft();
+    	amaster.moveLeft(deltaTime);
     } else if (masterdata.direction == 1) {
-    	amaster.moveRight();
+    	amaster.moveRight(deltaTime);
     }
 
     if (masterdata.dropham) {
-    	aham.moveDown();
+    	aham.moveDown(deltaTime);
     }
 
     if (aham.getY() + HAM_WIDTH >= DISPLAY_HEIGHT*0.9)

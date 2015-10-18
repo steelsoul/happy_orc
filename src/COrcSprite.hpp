@@ -18,8 +18,8 @@ public:
 			int dw, int states, int defaultstate = 0);
 	virtual ~COrcSprite();
 
-	void moveRight() override;
-	void moveLeft() override;
+	void moveRight(double deltaTime) override;
+	void moveLeft(double deltaTime) override;
 
 	CRectangle getSrcRect() const override;
 protected:

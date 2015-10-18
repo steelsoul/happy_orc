@@ -25,9 +25,9 @@ COrcSprite::~COrcSprite()
 {
 }
 
-void COrcSprite::moveRight()
+void COrcSprite::moveRight(double deltaTime)
 {
-	CBaseSprite::moveRight();
+	CBaseSprite::moveRight(deltaTime);
 	if (mDisplayWidth <= getX() + getW() - getSpeed())
 	{
 		setX(mDisplayWidth - getW());
@@ -38,9 +38,9 @@ void COrcSprite::moveRight()
 	}
 }
 
-void COrcSprite::moveLeft()
+void COrcSprite::moveLeft(double deltaTime)
 {
-	CBaseSprite::moveLeft();
+	CBaseSprite::moveLeft(deltaTime);
 	if (0 >= getX())
 	{
 		setX(0);

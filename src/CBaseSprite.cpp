@@ -40,27 +40,27 @@ void CBaseSprite::setY(int y)
 	mBound.mLowerLeft.my = my;
 }
 
-void CBaseSprite::moveLeft()
+void CBaseSprite::moveLeft(double deltaTime)
 {
-	mx -= ms;
+	mx -= ms * deltaTime;
 	mBound.mLowerLeft.mx = mx;
 }
 
-void CBaseSprite::moveRight()
+void CBaseSprite::moveRight(double deltaTime)
 {
-	mx += ms;
+	mx += ms * deltaTime;
 	mBound.mLowerLeft.mx = mx;
 }
 
-void CBaseSprite::moveDown()
+void CBaseSprite::moveDown(double deltaTime)
 {
-	my += ms;
+	my += ms * deltaTime;
 	mBound.mLowerLeft.my = my;
 }
 
-void CBaseSprite::moveUp()
+void CBaseSprite::moveUp(double deltaTime)
 {
-	my -= ms;
+	my -= ms * deltaTime;
 	mBound.mLowerLeft.my = my;
 }
 

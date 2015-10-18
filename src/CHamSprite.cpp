@@ -21,9 +21,9 @@ CHamSprite::~CHamSprite()
 {
 }
 
-void CHamSprite::moveDown()
+void CHamSprite::moveDown(double deltaTime)
 {
-	CBaseSprite::moveDown();
+	CBaseSprite::moveDown(deltaTime);
 }
 
 CRectangle CHamSprite::getSrcRect() const

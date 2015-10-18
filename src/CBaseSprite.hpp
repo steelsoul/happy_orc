@@ -21,10 +21,10 @@ public:
 	explicit CBaseSprite(int x, int y, int w, int h, uint32_t s);
 	virtual ~CBaseSprite();
 
-	virtual void moveRight();
-	virtual void moveLeft();
-	virtual void moveUp();
-	virtual void moveDown();
+	virtual void moveRight(double deltaTime);
+	virtual void moveLeft(double deltaTime);
+	virtual void moveUp(double deltaTime);
+	virtual void moveDown(double deltaTime);
 
 	void setX(int x);
 	void setY(int y);
@@ -39,7 +39,7 @@ public:
 	virtual CRectangle getSrcRect() const;
 	virtual CRectangle getBound() const;
 private:
-	int mx, my, mw, mh;
+	double mx, my, mw, mh;
 	CRectangle mBound;
 	uint32_t ms;
 };
