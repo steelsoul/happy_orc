@@ -306,7 +306,7 @@ void CGame::run() {
 }
 
 void CGame::update(double deltaTime) {
-	fprintf(stderr, "dt: %04f\n", deltaTime);
+	//fprintf(stderr, "dt: %04f\n", deltaTime);
     if ( keys[SDLK_LEFT] ) {
         //hero.x -= HERO_SPEED ;
 		ahero.moveLeft(deltaTime);
