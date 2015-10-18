@@ -74,7 +74,7 @@ CGame::~CGame() {
 
 
 void CGame::start() {
-	int flags = SDL_WINDOW_HIDDEN/* | SDL_WINDOW_FULLSCREEN*/ ;
+	int flags = SDL_WINDOW_HIDDEN /*| SDL_WINDOW_FULLSCREEN*/ ;
 	if (SDL_Init(SDL_INIT_EVERYTHING)) {
 		fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
 		return;
@@ -248,7 +248,7 @@ void CGame::drawScore() {
 	SDL_FreeSurface(tempsurf);
 
 	SDL_Rect dst;
-	dst.x = 10; dst.y = 50; dst.w = textsource.w; dst.h = textsource.h;
+	dst.x = 10; dst.y = DISPLAY_WIDTH * 0.2; dst.w = textsource.w; dst.h = textsource.h;
 	SDL_RenderCopy(renderer, mscore, &textsource, &dst);
 }
 
