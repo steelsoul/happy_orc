@@ -74,4 +74,11 @@ CRectangle CBaseSprite::getBound() const
 	return mBound;
 }
 
+int CBaseSprite::rounded(double value) const
+{
+	int aval = static_cast<int>(value);
+	double dv = value - static_cast<double>(aval);
+	return (dv <= 0.5 ? aval : aval + 1);
+}
+
 } /* namespace happyorc */

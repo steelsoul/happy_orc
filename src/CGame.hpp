@@ -54,6 +54,7 @@ private:
     std::map<int,int> keys;
     Uint32 frameSkip ;
     int running ;
+	bool mpaused;
 
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -65,6 +66,8 @@ private:
 	TTF_Font* mfont;
 	SDL_Texture* mscore;
 	int mscorepoints;
+
+	SDL_Texture* paused;
 
     COrcSprite ahero;
 	CHamSprite aham;

@@ -21,7 +21,7 @@ namespace happyorc {
 
 Uint32 my_timer_fn(Uint32 interval, void *param)
 {
-//	fprintf(stderr, "== on Time () ==\n");
+	//fprintf(stderr, "== on Time () ==\n");
 	if (param) {
 		CGame* game = reinterpret_cast<CGame*>(param);
 		game->startTimer();
@@ -33,6 +33,7 @@ CGame::CGame()
 : keys()
 , frameSkip(0u)
 , running(0)
+, mpaused(false)
 , window(NULL)
 , renderer(NULL)
 , background(NULL)
@@ -41,6 +42,7 @@ CGame::CGame()
 , mfont(NULL)
 , mscore(NULL)
 , mscorepoints(0)
+, paused(NULL)
 , ahero(0, 0, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH, 3)
 , aham(rand() % (DISPLAY_WIDTH - HAM_WIDTH), -HAM_WIDTH, HAM_WIDTH, HAM_HEIGHT, HAM_SPEED, DISPLAY_HEIGHT)
 , amaster(rand() % (DISPLAY_WIDTH - ORC_WIDTH), 0, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH, 3)
@@ -122,6 +124,7 @@ void CGame::start() {
 		TTF_SetFontHinting(mfont, hinting);
 	}
 
+	{}
 
 
 	ahero.setY(static_cast<int>(DISPLAY_HEIGHT*(1 - 0.2)));
@@ -190,6 +193,34 @@ void CGame::draw() {
 		SDL_RenderCopy(renderer, ham, &aSrcRect, &aDstRect);
 	}
 	drawScore();
+
+	if (mpaused) {
+		if (paused) {
+			SDL_DestroyTexture(paused);
+		}
+		SDL_Color textColor = { 0xFF, 0xFF, 0x00, 0 };
+		SDL_Surface * tempsurf = TTF_RenderText_Solid(mfont, "P A U S E D", textColor);
+		
+		paused = SDL_CreateTextureFromSurface(renderer, tempsurf);
+		
+		aSrcRect.x = 0;
+		aSrcRect.y = 0;
+		aSrcRect.w = tempsurf->w;
+		aSrcRect.h = tempsurf->h;
+
+		aDstRect.x = DISPLAY_WIDTH/2 - aSrcRect.w/2;
+		aDstRect.y = DISPLAY_HEIGHT/2 - aSrcRect.h/2;
+		aDstRect.w = aSrcRect.w;
+		aDstRect.h = aSrcRect.h;
+
+		aSrcRect.x = 0;
+		aSrcRect.y = 0;
+		aSrcRect.w = tempsurf->w;
+		aSrcRect.h = tempsurf->h;
+
+		SDL_FreeSurface(tempsurf);
+		SDL_RenderCopy(renderer, paused, &aSrcRect, &aDstRect);
+	}
 
 	SDL_RenderPresent(renderer);
 }
@@ -275,7 +306,15 @@ void CGame::run() {
         if (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_QUIT:    onQuit();            break;
-                case SDL_KEYDOWN: onKeyDown( &event ); break ;
+				case SDL_KEYDOWN:
+				{
+					if (event.key.keysym.sym == SDLK_p) {
+						mpaused = !mpaused;
+					}
+					
+					onKeyDown(&event); 
+				}
+					break;
                 case SDL_KEYUP:   onKeyUp( &event );   break ;
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:
@@ -287,8 +326,10 @@ void CGame::run() {
         timeElapsed = (now=SDL_GetTicks()) - past ;
         if ( timeElapsed >= UPDATE_INTERVAL  ) {
             past = now ;
-            update(timeElapsed/10.0);
-            if ( framesSkipped++ >= frameSkip ) {
+			if (!mpaused) {
+				update(timeElapsed / 20.0);
+			}
+			if ( framesSkipped++ >= frameSkip ) {
                 draw();
                 ++fps ;
                 framesSkipped = 0 ;

@@ -29,15 +29,19 @@ public:
 	void setX(int x);
 	void setY(int y);
 
-	int getX() const {return mx; }
-	int getY() const {return my; }
-	int getW() const {return mw; }
-	int getH() const {return mh; }
+	int getX() const { return rounded(mx); }
+	int getY() const { return rounded(my); }
+	int getW() const { return rounded(mw); }
+	int getH() const { return rounded(mh); }
 	uint32_t getSpeed() const { return ms; }
 
 	void setSpeed(uint32_t speed);
 	virtual CRectangle getSrcRect() const;
 	virtual CRectangle getBound() const;
+
+private:
+	int rounded(double value) const;
+
 private:
 	double mx, my, mw, mh;
 	CRectangle mBound;

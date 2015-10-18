@@ -29,6 +29,7 @@ private:
 	int mStates;
 	int mState;
 	int mDisplayWidth;
+	uint8_t mStateCounter;
 };
 
 } /* namespace happyorc */

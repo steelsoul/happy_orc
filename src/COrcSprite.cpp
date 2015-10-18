@@ -18,6 +18,7 @@ COrcSprite::COrcSprite(int x, int y, int w, int h, uint32_t s,
 , mStates(states)
 , mState(defaultState)
 , mDisplayWidth(dw)
+, mStateCounter(0u)
 {
 }
 
@@ -54,26 +55,30 @@ void COrcSprite::moveLeft(double deltaTime)
 
 void COrcSprite::update_right()
 {
-	if (getX() % 20 == 0)
+	mStateCounter++;
+	if (mStateCounter % 20 == 0)
 	{
 		mState++;
-		if (mStates < mState)
+		if (mState > mStates)
 		{
 			mState = 0;
 		}
 	}
+	if (mStateCounter > 100u) mStateCounter = 0u;
 }
 
 void COrcSprite::update_left()
 {
-	if (getX() % 20 == 0)
+	mStateCounter++;
+	if (mStateCounter % 20 == 0)
 	{
 		mState--;
-		if (0 > mState)
+		if (mState < 0)
 		{
 			mState = mStates;
 		}
 	}
+	if (mStateCounter > 100u) mStateCounter = 0u;
 }
 
 
