@@ -3,6 +3,10 @@
 #include "CGame.hpp"
 #include "COrcSprite.hpp"
 
+#include "CMainDispatcher.hpp"
+#include "CMenu.hpp"
+
+using namespace happyorc;
 
 #ifdef _WIN32
 int wmain(int argc, char* argv[])
@@ -10,7 +14,11 @@ int wmain(int argc, char* argv[])
 int main(int argc, char* argv[])
 #endif
 {
-	happyorc::CGame game;
-	game.start();
+	CMainDispatcher dispatcher;
+	CMenu menu(dispatcher);
+
+	dispatcher.setNewPlayable(&menu);
+	dispatcher.play();
+
 	return 0;
 }
