@@ -26,6 +26,7 @@ public:
 	virtual bool run() override;
 	virtual void onPrepare(int perc) override;
 	virtual bool isAlive() const override;
+	virtual void cleanup() override;
 
 private:
 	void drawFrame();

@@ -17,6 +17,7 @@ public:
 	virtual bool run() = 0;
 	virtual void onPrepare(int perc) = 0;
 	virtual bool isAlive() const = 0;
+	virtual void cleanup() = 0;
 };
 
 

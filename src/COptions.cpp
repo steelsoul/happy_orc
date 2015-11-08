@@ -95,6 +95,10 @@ bool COptions::isAlive() const {
 	return mAlive;
 }
 
+void COptions::cleanup() {
+	cout << __FUNCTION__ << "\n";
+}
+
 void COptions::drawFrame() {
 	// Clear screen
 	SDL_SetRenderDrawColor(mRenderer, 0, 0xFF, 0, SDL_ALPHA_OPAQUE);

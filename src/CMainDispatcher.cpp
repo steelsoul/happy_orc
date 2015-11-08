@@ -60,6 +60,7 @@ void CMainDispatcher::onDestroy(IPlayable* which)
 		if (*p == which) {
 		mPlayables.erase(p);
 		cout << "0000\n"; cout.flush();
+		if (!mPlayables.empty()) mPlayables.back()->cleanup();
 		break;
 		}
 	}

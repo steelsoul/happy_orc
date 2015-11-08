@@ -120,6 +120,13 @@ bool CMenu::isAlive() const {
 	return mAlive;
 }
 
+void CMenu::cleanup() {
+	cout << __FUNCTION__ << "\n";
+	if (mOptions) {
+		delete mOptions;
+	}
+}
+
 void CMenu::quit() {
 	mAlive = false;
 }
