@@ -21,6 +21,7 @@ CMainDispatcher::CMainDispatcher()
 , mPlayables()
 , mIsRunning(initSDL())
 , mPrepared(false)
+, mRemoved(false)
 {
 	cout << __FUNCTION__ << "[ctor]\n";
 }
@@ -59,8 +60,9 @@ void CMainDispatcher::onDestroy(IPlayable* which)
 	for (auto p = mPlayables.begin(); p != mPlayables.end(); p++) {
 		if (*p == which) {
 		mPlayables.erase(p);
+		mRemoved = true;
 		cout << "0000\n"; cout.flush();
-		if (!mPlayables.empty()) mPlayables.back()->cleanup();
+		//if (!mPlayables.empty()) mPlayables.back()->cleanup();
 		break;
 		}
 	}
@@ -123,11 +125,25 @@ void CMainDispatcher::play() {
 //		cout << "1"; cout.flush();
 		if (mPrepared && !mPlayables.empty()) {
 //			cout << "0"; cout.flush();
-			mIsRunning = mPlayables.back()->run();
+			if (mRemoved) {
+				mPlayables.back()->cleanup();
+				mRemoved = false;
+			}
+			else {
+				mIsRunning = mPlayables.back()->run();
+			}
 		}
 //		cout << "2"; cout.flush();
 		//if (counter++ > 200) break;
 		SDL_Delay(10);
 	}
+}
+
+void CMainDispatcher::quit() {
+	cout << __FUNCTION__ << "\n";
+	for (auto p : mPlayables) {
+		p->cleanup();
+	}
+	mPlayables.clear();
 }
 

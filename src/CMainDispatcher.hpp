@@ -21,6 +21,7 @@ public:
 
 	void setNewPlayable(IPlayable* playable);
 	void play();
+	void quit();
 
 	/**
 	 * ICompleteListener interface
@@ -47,6 +48,7 @@ private:
 	std::vector<IPlayable*> mPlayables;
 	bool mPrepared;
 	bool mIsRunning;
+	bool mRemoved;
 
 };
 

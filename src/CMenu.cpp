@@ -38,6 +38,7 @@ CMenu::CMenu(CMainDispatcher& dispatcher)
 , mMenuTexture(nullptr)
 , mTimerId(0)
 , mOptions(nullptr)
+, mGame(nullptr)
 {
 	cout << __FUNCTION__ << " [ctor]\n";
 }
@@ -132,6 +133,11 @@ void CMenu::cleanup() {
 	cout << __FUNCTION__ << "\n";
 	if (mOptions) {
 		delete mOptions;
+		mOptions = nullptr;
+	}
+	if (mGame) {
+		delete mGame;
+		mGame = nullptr;
 	}
 }
 
@@ -212,6 +218,8 @@ void CMenu::processInput() {
 	cout << __FUNCTION__ << " selection: " << mSelection << "\n";
 	switch (mSelection) {
 	case 0:
+		mGame = new CGame(mDispatcher);
+		mDispatcher.setNewPlayable(mGame);
 		break;
 	case 1:
 		mOptions = new COptions(mDispatcher);

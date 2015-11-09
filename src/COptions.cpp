@@ -26,6 +26,7 @@ COptions::COptions(CMainDispatcher& dispatcher)
 COptions::~COptions()
 {
 	cout << __FUNCTION__ << " [dtor]\n";
+	mAlive = false;
 }
 
 void COptions::init(SDL_Window* window, SDL_Renderer* renderer)
@@ -68,7 +69,7 @@ bool COptions::run() {
 				case SDL_QUIT:
 					mAlive = false;
 					mDispatcher.onDestroy(this);
-					break;
+					return mAlive;
 				case SDL_KEYDOWN:
 					mAlive = false;
 					mDispatcher.onDestroy(this);
@@ -101,9 +102,11 @@ void COptions::cleanup() {
 
 void COptions::drawFrame() {
 	// Clear screen
-	SDL_SetRenderDrawColor(mRenderer, 0, 0xFF, 0, SDL_ALPHA_OPAQUE);
-	SDL_RenderClear(mRenderer);
+	if (mAlive) {
+		SDL_SetRenderDrawColor(mRenderer, 0, 0xFF, 0, SDL_ALPHA_OPAQUE);
+		SDL_RenderClear(mRenderer);
 
-	SDL_RenderPresent(mRenderer);
+		SDL_RenderPresent(mRenderer);
+	}
 }
 

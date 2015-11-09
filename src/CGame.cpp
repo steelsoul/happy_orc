@@ -9,6 +9,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
+#include <iostream>
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
@@ -17,7 +18,10 @@
 
 #include "overlaptester/COverlapTester.hpp"
 
-namespace happyorc {
+#include "CMainDispatcher.hpp"
+
+using namespace std;
+using namespace happyorc;
 
 Uint32 my_timer_fn(Uint32 interval, void *param)
 {
@@ -29,64 +33,62 @@ Uint32 my_timer_fn(Uint32 interval, void *param)
 	return 0u;
 }
 
-CGame::CGame()
-: keys()
+CGame::CGame(CMainDispatcher& dispatcher)
+: mDispatcher(dispatcher)
+, mWindow(nullptr)
+, mRenderer(nullptr)
+, keys()
 , frameSkip(0u)
-, running(0)
 , mpaused(false)
-, window(NULL)
-, renderer(NULL)
-, background(NULL)
-, orcs(NULL)
-, ham(NULL)
-, mfont(NULL)
-, mscore(NULL)
+, background(nullptr)
+, orcs(nullptr)
+, ham(nullptr)
+, mFont(nullptr)
+, mscore(nullptr)
 , mscorepoints(0)
-, paused(NULL)
+, paused(nullptr)
 , ahero(0, 0, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH, 3)
 , aham(rand() % (DISPLAY_WIDTH - HAM_WIDTH), -HAM_WIDTH, HAM_WIDTH, HAM_HEIGHT, HAM_SPEED, DISPLAY_HEIGHT)
 , amaster(rand() % (DISPLAY_WIDTH - ORC_WIDTH), 0, ORC_WIDTH, ORC_HEIGHT, HERO_SPEED, DISPLAY_WIDTH, 3)
 , masterdata()
+, mAlive(false)
+, mTimerID(0)
 {
+	cout << __FUNCTION__ << "[ctor]\n";
 	srand(time(NULL));
 	aham.setX(rand() % (DISPLAY_WIDTH - HAM_WIDTH));
 }
 
-void CGame::startTimer() {
-	SDL_TimerID tid = SDL_AddTimer(500 + rand() % 800, my_timer_fn, this);
-//	fprintf(stderr, "Start timer with ID %d\n", static_cast<int>(tid));
+CGame::~CGame() {
+	cout << __FUNCTION__ << "[dtor]\n";
+	this->stop();
+}
 
-	/* update direction of master orc */
-	masterdata.direction = rand() % 3;
-	if (!masterdata.dropham) {
-		if (rand() % 2 == 0) {
-			masterdata.dropham = true;
-	    	aham.setX(amaster.getX() + (ORC_SPRITE_WIDTH - HAM_SPRITE_WIDTH)/2);
-	    	aham.setY(amaster.getY() + (ORC_SPRITE_HEIGHT - HAM_SPRITE_HEIGHT)/2);
+void CGame::init(SDL_Window* window, SDL_Renderer* renderer)
+{
+	mWindow = window;
+	mRenderer = renderer;
+
+	bool ttfInitResult = true;
+
+	/* Initialize the TTF library */
+	ttfInitResult = (TTF_Init() == 0);
+
+	if (ttfInitResult) {
+		mFont = TTF_OpenFont("Effinground.ttf", 30);
+		if (!mFont) {
+			ttfInitResult = false;
 		}
 	}
-//	fprintf(stdout, "master direction : %d\n", masterdata.direction);
-}
 
-CGame::~CGame() {
-    this->stop();
-}
+	if (ttfInitResult) {
+		TTF_SetFontStyle(mFont, TTF_STYLE_NORMAL | TTF_STYLE_BOLD);
+		TTF_SetFontOutline(mFont, 0);
+		TTF_SetFontKerning(mFont, 0);
+		TTF_SetFontHinting(mFont, TTF_HINTING_NORMAL);
+	}
 
-
-void CGame::start() {
-	int flags = SDL_WINDOW_HIDDEN /*| SDL_WINDOW_FULLSCREEN*/ ;
-	if (SDL_Init(SDL_INIT_EVERYTHING)) {
-		fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
-		return;
-	}
-	/* Initialize the TTF library */
-	if (TTF_Init() < 0) {
-		fprintf(stderr, "Couldn't initialize TTF: %s\n", SDL_GetError());
-		return;
-	}
-	if (SDL_CreateWindowAndRenderer(DISPLAY_WIDTH, DISPLAY_HEIGHT, flags, &window, &renderer)) {
-		return;
-	}
+	cerr << "TTF library initialized: " << boolalpha << ttfInitResult << "\n";
 
 	background = IMG_LoadTexture(renderer, "forest_480x320.jpg");
 	if (!background) {
@@ -106,34 +108,88 @@ void CGame::start() {
 		return;
 	}
 
-	mfont = TTF_OpenFont("Effinground.ttf", 30);
-	if (!mfont) {
-		fprintf(stderr, "Error: %s", SDL_GetError());
-		return;
-	}
-
-	{
-		int renderStyle = TTF_STYLE_NORMAL | TTF_STYLE_BOLD;
-		int hinting = TTF_HINTING_NORMAL;
-		int outline = 0;
-		int kerning = 0;
-
-		TTF_SetFontStyle(mfont, renderStyle);
-		TTF_SetFontOutline(mfont, outline);
-		TTF_SetFontKerning(mfont, kerning);
-		TTF_SetFontHinting(mfont, hinting);
-	}
-
-	{}
-
-
 	ahero.setY(static_cast<int>(DISPLAY_HEIGHT*(1 - 0.2)));
-
-	this->running = 1;
 	startTimer();
 
-	SDL_ShowWindow(window);
-	run();
+	mAlive = true;
+	mDispatcher.onComplete();
+}
+
+bool CGame::run() {	
+	SDL_Event event;
+
+	if (mAlive) {
+		if (SDL_PollEvent(&event)) 
+		{
+			switch (event.type) {
+			case SDL_QUIT:
+				mAlive = false;
+				mDispatcher.onDestroy(this);
+				//mDispatcher.quit();
+				//onQuit(); 
+				break;
+			case SDL_KEYDOWN:
+			{
+				if (event.key.keysym.sym == SDLK_ESCAPE) {
+					mDispatcher.onDestroy(this);
+					mAlive = false;
+				}
+				if (event.key.keysym.sym == SDLK_p) {
+					mpaused = !mpaused;
+				}
+
+				onKeyDown(&event);
+			}
+				break;
+			case SDL_KEYUP:   
+				onKeyUp(&event);   
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+			case SDL_MOUSEMOTION:
+				break;
+			}
+		}
+
+		if (mAlive) {
+
+			if (!mpaused) {
+				update(0.1); // TODO: fix this
+			}
+			draw(); 
+		}
+	}
+
+	return mAlive;
+}
+
+void CGame::onPrepare(int perc) {
+	cout << __FUNCTION__ << " " << perc << "%\n";
+}
+
+bool CGame::isAlive() const {
+	return mAlive;
+}
+
+void CGame::cleanup() {
+	cout << __FUNCTION__ << "\n";
+}
+
+
+void CGame::startTimer() {
+	mTimerID = SDL_AddTimer(500 + rand() % 800, my_timer_fn, this);
+//	fprintf(stderr, "Start timer with ID %d\n", static_cast<int>(tid));
+
+	/* update direction of master orc */
+	masterdata.direction = rand() % 3;
+	if (!masterdata.dropham) {
+		if (rand() % 2 == 0) {
+			masterdata.dropham = true;
+	    	aham.setX(amaster.getX() + (ORC_SPRITE_WIDTH - HAM_SPRITE_WIDTH)/2);
+	    	aham.setY(amaster.getY() + (ORC_SPRITE_HEIGHT - HAM_SPRITE_HEIGHT)/2);
+		}
+	}
+//	fprintf(stdout, "master direction : %d\n", masterdata.direction);
 }
 
 void CGame::draw() {
@@ -141,11 +197,11 @@ void CGame::draw() {
 	SDL_Rect aSrcRect;
 
 	// Clear screen
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-	SDL_RenderClear(renderer);
+	SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+	SDL_RenderClear(mRenderer);
 
 	if (NULL != background) {
-		SDL_RenderCopy(renderer, background, NULL, NULL);
+		SDL_RenderCopy(mRenderer, background, NULL, NULL);
 	}
 
 	//// Render hero
@@ -160,7 +216,7 @@ void CGame::draw() {
 	aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
 	aSrcRect.h = static_cast<int>(spriteSrc.mheight);
 
-	SDL_RenderCopy(renderer, orcs, &aSrcRect, &aDstRect);
+	SDL_RenderCopy(mRenderer, orcs, &aSrcRect, &aDstRect);
 
 	/// Render master
 	aDstRect.x = amaster.getX();
@@ -174,7 +230,7 @@ void CGame::draw() {
 	aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
 	aSrcRect.h = static_cast<int>(spriteSrc.mheight);
 
-	SDL_RenderCopy(renderer, orcs, &aSrcRect, &aDstRect);
+	SDL_RenderCopy(mRenderer, orcs, &aSrcRect, &aDstRect);
 
 	/// Render ham
 	if (masterdata.dropham)
@@ -190,7 +246,7 @@ void CGame::draw() {
 		aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
 		aSrcRect.h = static_cast<int>(spriteSrc.mheight);
 
-		SDL_RenderCopy(renderer, ham, &aSrcRect, &aDstRect);
+		SDL_RenderCopy(mRenderer, ham, &aSrcRect, &aDstRect);
 	}
 	drawScore();
 
@@ -199,9 +255,9 @@ void CGame::draw() {
 			SDL_DestroyTexture(paused);
 		}
 		SDL_Color textColor = { 0xFF, 0xFF, 0x00, 0 };
-		SDL_Surface * tempsurf = TTF_RenderText_Solid(mfont, "P A U S E D", textColor);
+		SDL_Surface * tempsurf = TTF_RenderText_Solid(mFont, "P A U S E D", textColor);
 		
-		paused = SDL_CreateTextureFromSurface(renderer, tempsurf);
+		paused = SDL_CreateTextureFromSurface(mRenderer, tempsurf);
 		
 		aSrcRect.x = 0;
 		aSrcRect.y = 0;
@@ -219,24 +275,24 @@ void CGame::draw() {
 		aSrcRect.h = tempsurf->h;
 
 		SDL_FreeSurface(tempsurf);
-		SDL_RenderCopy(renderer, paused, &aSrcRect, &aDstRect);
+		SDL_RenderCopy(mRenderer, paused, &aSrcRect, &aDstRect);
 	}
 
-	SDL_RenderPresent(renderer);
+	SDL_RenderPresent(mRenderer);
 }
 
 void CGame::drawScore() {
 	SDL_Color textColor = { 0xFF, 0x00, 0x00, 0 };
 	std::stringstream ss;
 	ss << mscorepoints << " PTS";
-	SDL_Surface * tempsurf = TTF_RenderText_Solid(mfont, ss.str().c_str(), textColor);
+	SDL_Surface * tempsurf = TTF_RenderText_Solid(mFont, ss.str().c_str(), textColor);
 
 	if (mscore) {
 		SDL_DestroyTexture(mscore);
 		mscore = NULL;
 	}
 
-	mscore = SDL_CreateTextureFromSurface(renderer, tempsurf);
+	mscore = SDL_CreateTextureFromSurface(mRenderer, tempsurf);
 
 	SDL_Rect textsource;
 
@@ -249,101 +305,43 @@ void CGame::drawScore() {
 
 	SDL_Rect dst;
 	dst.x = 10; dst.y = DISPLAY_WIDTH * 0.2; dst.w = textsource.w; dst.h = textsource.h;
-	SDL_RenderCopy(renderer, mscore, &textsource, &dst);
+	SDL_RenderCopy(mRenderer, mscore, &textsource, &dst);
 }
 
 
 void CGame::stop() {
-    if (NULL != renderer) {
-        SDL_DestroyRenderer(renderer);
-        renderer = NULL;
-    }
-    if (NULL != window) {
-        SDL_DestroyWindow(window);
-        window = NULL;
-    }
-    if (NULL != background) {
-    	SDL_DestroyTexture(background);
-    }
-	if (NULL != orcs) {
-		SDL_DestroyTexture(orcs);
-	}
-	if (NULL != ham) {
-		SDL_DestroyTexture(ham);
-	}
-	if (NULL != mscore) {
-		SDL_DestroyTexture(mscore);
-	}
 
-	TTF_CloseFont(mfont);
-	TTF_Quit();
-    SDL_Quit() ;
+ //   if (NULL != background) {
+ //   	SDL_DestroyTexture(background);
+ //   }
+	//if (NULL != orcs) {
+	//	SDL_DestroyTexture(orcs);
+	//}
+	//if (NULL != ham) {
+	//	SDL_DestroyTexture(ham);
+	//}
+	//if (NULL != mscore) {
+	//	SDL_DestroyTexture(mscore);
+	//}
+
+	//TTF_CloseFont(mFont);
+	//TTF_Quit();
+	if (mTimerID) SDL_RemoveTimer(mTimerID);
 }
 
 void CGame::fillRect(SDL_Rect* rc, int r, int g, int b ) {
-    SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE);
-    SDL_RenderFillRect(renderer, rc);
+    SDL_SetRenderDrawColor(mRenderer, r, g, b, SDL_ALPHA_OPAQUE);
+	SDL_RenderFillRect(mRenderer, rc);
 }
 
 void CGame::fpsChanged( int fps ) {
 	std::stringstream ss;
 	ss << "Happy Orc " << fps << " FPS";
-	SDL_SetWindowTitle(window, ss.str().c_str());
+	SDL_SetWindowTitle(mWindow, ss.str().c_str());
 }
 
 void CGame::onQuit() {
 	fprintf(stdout, "Good bye!\n");
-    running = 0 ;
-}
-
-void CGame::run() {
-	Uint32 past = SDL_GetTicks();
-    Uint32 now = past, pastFps = past ;
-    Uint32 fps = 0, framesSkipped = 0 ;
-    SDL_Event event ;
-    while ( running ) {
-        int timeElapsed = 0 ;
-        if (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_QUIT:    onQuit();            break;
-				case SDL_KEYDOWN:
-				{
-					if (event.key.keysym.sym == SDLK_p) {
-						mpaused = !mpaused;
-					}
-					
-					onKeyDown(&event); 
-				}
-					break;
-                case SDL_KEYUP:   onKeyUp( &event );   break ;
-                case SDL_MOUSEBUTTONDOWN:
-                case SDL_MOUSEBUTTONUP:
-                case SDL_MOUSEMOTION:
-                    break ;
-            }
-        }
-        // update/draw
-        timeElapsed = (now=SDL_GetTicks()) - past ;
-        if ( timeElapsed >= UPDATE_INTERVAL  ) {
-            past = now ;
-			if (!mpaused) {
-				update(timeElapsed / 20.0);
-			}
-			if ( framesSkipped++ >= frameSkip ) {
-                draw();
-                ++fps ;
-                framesSkipped = 0 ;
-            }
-        }
-        // fps
-        if ( now - pastFps >= 1000 ) {
-            pastFps = now ;
-            fpsChanged( fps );
-            fps = 0 ;
-        }
-        // sleep?
-        SDL_Delay( 1 );
-    }
 }
 
 void CGame::update(double deltaTime) {
@@ -414,7 +412,7 @@ void CGame::loadsprite(const char* path, SDL_Texture*& texture)
 	if (temp)
 	{
 		setKeyColor(temp);
-		texture = SDL_CreateTextureFromSurface(renderer, temp);
+		texture = SDL_CreateTextureFromSurface(mRenderer, temp);
 		SDL_FreeSurface(temp);
 	} else {
 		fprintf(stderr, "Error: %s\n", SDL_GetError());
@@ -439,8 +437,6 @@ void CGame::checkCollisions() {
 }
 
 void CGame::onLoose() {
-	running = 0;
 	fprintf(stdout, "You loose with %d PTS. Have a nice day!\n", mscorepoints);
 }
 
-} /* namespace happyorc */

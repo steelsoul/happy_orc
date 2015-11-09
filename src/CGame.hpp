@@ -14,9 +14,11 @@
 #include "COrcSprite.hpp"
 #include "CHamSprite.hpp"
 
-namespace happyorc {
+#include "IPlayable.hpp"
 
-class CGame {
+class CMainDispatcher;
+
+class CGame: public IPlayable {
 	struct MasterData {
 		MasterData()
 		: direction(2), dropham(false)
@@ -25,11 +27,19 @@ class CGame {
 		bool dropham;
 	};
 public:
-	CGame();
+	CGame(CMainDispatcher&);
 	virtual ~CGame();
+	void startTimer();
 
-    void start();
-    void startTimer();
+	/**
+		IPlayable interface
+	*/
+	virtual void init(SDL_Window* window, SDL_Renderer* renderer) override;
+	virtual bool run() override;
+	virtual void onPrepare(int perc) override;
+	virtual bool isAlive() const override;
+	virtual void cleanup() override;
+
 private:
 
     void stop();
@@ -39,7 +49,6 @@ private:
     void onQuit();
     void onKeyDown( SDL_Event* event );
     void onKeyUp( SDL_Event* event );
-    void run();
     void update(double deltaTime);
 
 	void loadsprite(const char* path, SDL_Texture*&);
@@ -51,30 +60,31 @@ private:
 	void onLoose();
 
 private:
+	CMainDispatcher& mDispatcher;
+	SDL_Window* mWindow;
+	SDL_Renderer* mRenderer;
     std::map<int,int> keys;
     Uint32 frameSkip ;
-    int running ;
 	bool mpaused;
-
-    SDL_Window* window;
-    SDL_Renderer* renderer;
 
     SDL_Texture* background;
 	SDL_Texture* orcs;
 	SDL_Texture* ham;
 
-	TTF_Font* mfont;
+	TTF_Font* mFont;
 	SDL_Texture* mscore;
 	int mscorepoints;
 
 	SDL_Texture* paused;
 
-    COrcSprite ahero;
-	CHamSprite aham;
-	COrcSprite amaster;
+    happyorc::COrcSprite ahero;
+	happyorc::CHamSprite aham;
+	happyorc::COrcSprite amaster;
 	MasterData masterdata;
+	bool mAlive;
+
+	SDL_TimerID mTimerID;
 };
 
-} /* namespace happyorc */
 
 #endif /* SRC_CGAME_HPP_ */

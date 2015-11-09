@@ -18,6 +18,7 @@
 
 class CMainDispatcher;
 class COptions;
+class CGame;
 
 class CMenu: public IPlayable {
 public:
@@ -55,6 +56,7 @@ private:
 	
 
 	COptions* mOptions;
+	CGame* mGame;
 };
 
 #endif /* SRC_CMENU_HPP_ */
