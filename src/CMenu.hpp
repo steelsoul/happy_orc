@@ -10,6 +10,7 @@
 
 #include "SDL.h"
 #include "SDL_ttf.h"
+#include "SDL_timer.h"
 #include "IPlayable.hpp"
 
 #include <map>
@@ -31,6 +32,8 @@ public:
 
 	void quit();
 
+	void onTimer();
+
 private:
 	void onKeyDown(const SDL_Event& event);
 	void onKeyUp(const SDL_Event& event);
@@ -48,8 +51,8 @@ private:
 	bool mAlive;
 	int mSelection;
 	SDL_Texture* mMenuTexture;
-	bool mInputTimerEnable;
-	int mTickCounter;
+	int mTimerId;
+	
 
 	COptions* mOptions;
 };

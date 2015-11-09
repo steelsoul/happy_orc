@@ -16,6 +16,35 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/src/overlaptester")
 
 set ( SRC_DIR ${PROJECT_SOURCE_DIR}/src )
 
+if (WIN32)
+    if (DEFINED ENV{SDL2_IncludePath})
+        message(STATUS " SDL2 Includes are: " $ENV{SDL2_IncludePath})
+        set (SDL2_INCLUDE_DIRS $ENV{SDL2_IncludePath})
+    endif(DEFINED ENV{SDL2_IncludePath})
+    
+    if (DEFINED ENV{SDL2_x86_LibrariesPath})
+        message(STATUS "SDL2 Libraries path: " $ENV{SDL2_x86_LibrariesPath} )
+        include_directories($ENV{SDL2_x86_LibrariesPath})
+    endif(DEFINED ENV{SDL2_x86_LibrariesPath})
+    
+    set(CMAKE_PREFIX_PATH $ENV{SDL2_x86_LibrariesPath})
+    
+    find_library(SDL2_LIBRARIES 
+        NAME SDL2.lib
+        PATHS $ENV{SDL2_x86_LibrariesPath})
+    message(STATUS "SDL2 LIBRARIES: " ${SDL2_LIBRARIES} )
+            
+    find_library(SDL2_IMG_LIBRARIES 
+        NAME SDL2_image.lib
+        PATHS $ENV{SDL2_x86_LibrariesPath})
+    message(STATUS "SDL2 IMAGE LIBRARIES: " ${SDL2_IMG_LIBRARIES} )
+
+    find_library(SDL2_TTF_LIBRARIES
+        NAME SDL2_ttf.lib
+        PATHS $ENV{SDL2_x86_LibrariesPath})
+    message(STATUS "SDL2 TTF LIBRARIES: " ${SDL2_TTF_LIBRARIES} )
+endif(WIN32)
+
 set (PROJECT_INCLUDE_DIRS
     ${SDL2_INCLUDE_DIRS}
     ${SDL2_IMG_INCLUDE_DIRS}

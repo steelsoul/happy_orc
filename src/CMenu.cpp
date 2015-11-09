@@ -16,6 +16,17 @@ using namespace std;
 const int MENU_ELEMENTS = 4;
 const char* MENU_TEXT[MENU_ELEMENTS] = { "START GAME", "OPTIONS", "HALL OF FAME", "EXIT" };
 
+Uint32 my_callbackfn(Uint32 interval, void* param)
+{
+	if (param) {
+		CMenu* m = reinterpret_cast<CMenu*>(param);
+		if (m) {
+			m->onTimer();
+		}
+	}
+	return interval;
+}
+
 CMenu::CMenu(CMainDispatcher& dispatcher)
 : mDispatcher(dispatcher)
 , mWindow(nullptr)
@@ -25,8 +36,7 @@ CMenu::CMenu(CMainDispatcher& dispatcher)
 , mAlive(false)
 , mSelection(0)
 , mMenuTexture(nullptr)
-, mInputTimerEnable(false)
-, mTickCounter(0)
+, mTimerId(0)
 , mOptions(nullptr)
 {
 	cout << __FUNCTION__ << " [ctor]\n";
@@ -73,41 +83,39 @@ bool CMenu::run()
 		SDL_Event event ;
 		if (SDL_PollEvent(&event)) {
 			switch (event.type) {
-				case SDL_QUIT:
-					mDispatcher.onDestroy(this);
-					mAlive = false;
-					break;
-				case SDL_KEYDOWN:
-					mInputTimerEnable = true;
-					mTickCounter = 0;
+			case SDL_QUIT:
+				mDispatcher.onDestroy(this);
+				mAlive = false;
+				break;
+			case SDL_KEYDOWN:
+				if (mTimerId == 0) {
+					mTimerId = SDL_AddTimer(100, &my_callbackfn, this);
 					onKeyDown(event);
-					break;
-				case SDL_KEYUP:
-					onKeyUp(event);
-					break ;
-				case SDL_MOUSEBUTTONDOWN:
-				case SDL_MOUSEBUTTONUP:
-				case SDL_MOUSEMOTION:
-					break ;
+				}
+				break;
+			case SDL_KEYUP:
+				onKeyUp(event);
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+			case SDL_MOUSEMOTION:
+				break;
 			}
 		}
 		drawFrame();
 
-		if (mTickCounter == 0) {
-			if (mEvents[SDLK_DOWN]) {
-				mSelection++; if (mSelection >= MENU_ELEMENTS) mSelection = 0;
-			} else if (mEvents[SDLK_UP]) {
-				mSelection--; if (mSelection < 0) mSelection = MENU_ELEMENTS - 1;
-			} else if (mEvents[SDLK_RETURN]) {
-				processInput();
-			}
+
+		if (mEvents[SDLK_DOWN]) {
+			mSelection++; if (mSelection >= MENU_ELEMENTS) mSelection = 0;
+			mEvents.clear();
+		} else if (mEvents[SDLK_UP]) {
+			mSelection--; if (mSelection < 0) mSelection = MENU_ELEMENTS - 1;
+			mEvents.clear();
+		} else if (mEvents[SDLK_RETURN]) {
+			processInput();
+			mEvents.clear();
 		}
 
-		if (mInputTimerEnable) {
-			if (mTickCounter++ > 100)  {
-				mInputTimerEnable = false; mTickCounter = 0;
-			}
-		}
 	}
 	return mAlive;
 }
@@ -217,6 +225,11 @@ void CMenu::processInput() {
 		mDispatcher.onDestroy(this);
 		break;
 	}
+}
+
+void CMenu::onTimer()
+{
+	mTimerId = 0;
 }
 
 
