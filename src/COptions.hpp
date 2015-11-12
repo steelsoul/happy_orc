@@ -8,12 +8,9 @@
 #ifndef SRC_COPTIONS_HPP_
 #define SRC_COPTIONS_HPP_
 
-#include "IPlayable.hpp"
-#include "SDL_ttf.h"
+#include "CBaseScreen.hpp"
 
-class CMainDispatcher;
-
-class COptions: public IPlayable {
+class COptions: public CBaseScreen {
 public:
 	COptions(CMainDispatcher& );
 	virtual ~COptions();
@@ -21,23 +18,25 @@ public:
 	/**
 	 * IPlayable interface
 	 * */
-
-	virtual void init(SDL_Window* window, SDL_Renderer* renderer) override;
-	virtual bool run() override;
-	virtual void onPrepare(int perc) override;
-	virtual bool isAlive() const override;
-	virtual void cleanup() override;
-
-private:
-	void drawFrame();
+	void init(SDL_Window* window, SDL_Renderer* renderer) override;
+	bool run() override;
+	void onPrepare(int perc) override;
+	bool isAlive() const override;
+	void cleanup() override;
 
 private:
-	CMainDispatcher& mDispatcher;
-	SDL_Window* mWindow;
-	SDL_Renderer* mRenderer;
+	void drawFrame() override;
 
-	TTF_Font* mFont;
-	bool mAlive;
+	void readOptionsFromFile();
+	void updateOptionsFile();
+
+private:
+	bool mSoundEnabled = true;
+	bool mMusicEnabled = true;
+	int mSelection = 0;
+
+	SDL_Texture* mOptionsTexture = nullptr;
+
 };
 
 #endif /* SRC_COPTIONS_HPP_ */

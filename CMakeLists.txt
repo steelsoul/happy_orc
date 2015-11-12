@@ -77,6 +77,7 @@ SET(SRC_LIST
 	${SRC_DIR}/CHamSprite.cpp
 	${SRC_DIR}/CGame.cpp
 	${SRC_DIR}/CMainDispatcher.cpp
+	${SRC_DIR}/CBaseScreen.cpp
 	${SRC_DIR}/CMenu.cpp
 	${SRC_DIR}/COptions.cpp)
 	
