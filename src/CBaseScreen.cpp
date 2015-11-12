@@ -8,6 +8,11 @@
 #include "CBaseScreen.hpp"
 #include "CMainDispatcher.hpp"
 
+#include <vector>
+#include <iostream>
+
+using namespace std;
+
 Uint32 my_callbackfn(Uint32 interval, void* param)
 {
 	if (param) {
@@ -19,17 +24,21 @@ Uint32 my_callbackfn(Uint32 interval, void* param)
 	return interval;
 }
 
+const char* CBaseScreen::DEFAULT_FONT_NAME = "Effinground.ttf";
+
 CBaseScreen::CBaseScreen(CMainDispatcher& dispatcher)
 : mDispatcher(dispatcher)
 {
+	cout << __FUNCTION__ << " [ctor]\n";
 }
 
 CBaseScreen::~CBaseScreen()
 {
+	cout << __FUNCTION__ << " [dtor]\n";
 	if (mTimerID) {
 		SDL_RemoveTimer(mTimerID);
 	}
-	closeTTF();
+	closeTTF();	
 }
 
 void CBaseScreen::init(SDL_Window* window, SDL_Renderer* renderer)
@@ -47,6 +56,7 @@ bool CBaseScreen::run()
 		processInputEvents(100);
 		drawFrame();
 	}
+	return mAlive;
 }
 
 void CBaseScreen::onPrepare(int perc)
@@ -66,8 +76,17 @@ bool CBaseScreen::getEvent(int event) const
 	}
 }
 
+bool CBaseScreen::isTimerRunning() const
+{
+	return mTimerID != 0;
+}
+
 void CBaseScreen::resetTimer() {
 	mTimerID = 0;
+}
+
+void CBaseScreen::quit() {
+	mDispatcher.onDestroy(this);
 }
 
 void CBaseScreen::processInputEvents(int delayMs)
@@ -116,6 +135,9 @@ bool CBaseScreen::initTTF(const char* const fontname, const int fontsize)
 		TTF_SetFontOutline(mFont, 0);
 		TTF_SetFontKerning(mFont, 0);
 		TTF_SetFontHinting(mFont, TTF_HINTING_NORMAL);
+
+		mFontName = fontname;
+		mFontSize = fontsize;
 	}
 
 	return ttfInitResult;
@@ -136,6 +158,54 @@ void CBaseScreen::drawFrame()
 
 void CBaseScreen::sendOnComplete() {
 	mDispatcher.onComplete();
+}
+
+void CBaseScreen::drawMenuTextBlock(const char** strings, const int count, SDL_Texture*& texture, int selection,
+									SDL_Color baseColor, SDL_Color selectionColor)
+{
+	vector<SDL_Surface*> surfaces;	
+	vector<SDL_Rect> sourcesRect;
+	int totalW = 0; int totalH = 0;
+
+	for (auto i = 0; i < count; i++) {
+		SDL_Color color;
+		SDL_Rect srcRect = {0, 0, 0, 0};
+
+
+		color = (i == selection) ? selectionColor : baseColor;
+		SDL_Surface* srcSurface = TTF_RenderText_Solid(mFont, strings[i], color);
+		srcRect.w = srcSurface->w;
+		srcRect.h = srcSurface->h;
+		totalH += srcSurface->h;
+		if (srcSurface->w > totalW) totalW = srcSurface->w;
+		sourcesRect.push_back(srcRect);
+		surfaces.push_back(srcSurface);
+	}
+
+	int power2 = surfaces[0]->format->BitsPerPixel;
+	int depth = (power2 == 8) ? 32 : (power2 == 4) ? 16 : 8;
+
+	SDL_Surface* allTogether = SDL_CreateRGBSurface(0, totalW, totalH, depth, 0, 0, 0, 0);
+
+	SDL_Rect dstRect = { 0, 0, 0, 0 };
+	for (auto i = 0; i < count; i++) {
+		dstRect.w = sourcesRect[i].w;
+		dstRect.h = sourcesRect[i].h;
+		SDL_BlitSurface(surfaces[i], &sourcesRect[i], allTogether, &dstRect);
+		dstRect.y += sourcesRect[i].h;
+
+		SDL_FreeSurface(surfaces[i]);
+		surfaces[i] = nullptr;
+	}
+
+	texture = SDL_CreateTextureFromSurface(mRenderer, allTogether);
+	SDL_FreeSurface(allTogether);
+}
+
+void CBaseScreen::changeTextSize(int newTextSize)
+{
+	TTF_CloseFont(mFont);
+	mFont = TTF_OpenFont(mFontName, mFontSize);
 }
 
 void CBaseScreen::onKeyDown(const SDL_Event& event)

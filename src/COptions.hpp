@@ -24,6 +24,9 @@ public:
 	bool isAlive() const override;
 	void cleanup() override;
 
+	void onKeyUp(const SDL_Event&) override;
+	void onKeyDown(const SDL_Event&) override;
+
 private:
 	void drawFrame() override;
 

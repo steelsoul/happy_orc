@@ -16,7 +16,7 @@ using namespace std;
 const int MENU_ELEMENTS = 4;
 const char* MENU_TEXT[MENU_ELEMENTS] = { "START GAME", "OPTIONS", "HALL OF FAME", "EXIT" };
 
-Uint32 my_callbackfn(Uint32 interval, void* param)
+Uint32 my_callbackfn2(Uint32 interval, void* param)
 {
 	if (param) {
 		CMenu* m = reinterpret_cast<CMenu*>(param);
@@ -90,7 +90,7 @@ bool CMenu::run()
 				break;
 			case SDL_KEYDOWN:
 				if (mTimerId == 0) {
-					mTimerId = SDL_AddTimer(100, &my_callbackfn, this);
+					mTimerId = SDL_AddTimer(100, &my_callbackfn2, this);
 					onKeyDown(event);
 				}
 				break;

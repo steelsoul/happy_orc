@@ -66,52 +66,24 @@ void COptions::drawFrame() {
 	// Clear screen
 	SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(mRenderer);
-
-	SDL_Color textColor = 	{0xff, 0xaa, 0x00, 0};
-	SDL_Color selectColor = {0xff, 0xff, 0xff, 0};
-	SDL_Color color = textColor;
-
-	SDL_Surface* surfaces[OPTIONS_ELEMENTS];
-	SDL_Rect sourcesRect[OPTIONS_ELEMENTS];
-	int totalW = 0; int totalH = 0;
-
-	int depth = 0;
-	for (auto i = 0; i < OPTIONS_ELEMENTS; i++) {
-		color = (i == mSelection) ? selectColor : textColor;
-		surfaces[i] = TTF_RenderText_Solid(mFont, OPTIONS_TEXT[i], color);
-		sourcesRect[i].x = sourcesRect[i].y = 0;
-		sourcesRect[i].w = surfaces[i]->w;
-		sourcesRect[i].h = surfaces[i]->h;
-		totalH += surfaces[i]->h;
-		if (surfaces[i]->w > totalW) totalW = surfaces[i]->w;
-	}
-
-	int power2 = surfaces[0]->format->BitsPerPixel;
-	depth = (power2 == 8) ? 32 : (power2 == 4) ? 16 : 8;
-
-	SDL_Surface* allTogether = SDL_CreateRGBSurface(0, totalW, totalH, depth, 0, 0, 0, 0);
-
-	SDL_Rect dstRect = {0, 0, 0, 0};
-	for (auto i = 0; i < OPTIONS_ELEMENTS; i++){
-		dstRect.w = sourcesRect[i].w;
-		dstRect.h = sourcesRect[i].h;
-		SDL_BlitSurface(surfaces[i], &sourcesRect[i], allTogether, &dstRect);
-		dstRect.y += sourcesRect[i].h;
-
-		SDL_FreeSurface(surfaces[i]);
-	}
-
-	aSrcRect.w = aDstRect.w = totalW;
-	aSrcRect.h = aDstRect.h = totalH;
-
+	
 	if (mOptionsTexture) {
-		SDL_DestroyTexture(mMenuTexture);
+		SDL_DestroyTexture(mOptionsTexture);
+		mOptionsTexture = nullptr;
 	}
-	mOptionsTexture = SDL_CreateTextureFromSurface(mRenderer, allTogether);
+	
+	CBaseScreen::drawMenuTextBlock(OPTIONS_TEXT, OPTIONS_ELEMENTS, mOptionsTexture, mSelection);
+	
+	if (mOptionsTexture) {
+		int w; 
+		int h;
+		SDL_QueryTexture(mOptionsTexture, 0, 0, &w, &h);
+		
+		aSrcRect.w = aDstRect.w = w;
+		aSrcRect.h = aDstRect.h = h;
 
-	SDL_FreeSurface(allTogether);
-
-	SDL_RenderCopy(mRenderer, mOptionsTexture, &aSrcRect, &aDstRect);
+		SDL_RenderCopy(mRenderer, mOptionsTexture, &aSrcRect, &aDstRect);
+	}
 
 	SDL_RenderPresent(mRenderer);
 }
@@ -140,3 +112,28 @@ void COptions::updateOptionsFile() {
 	fs.close();
 }
 
+void COptions::onKeyUp(const SDL_Event&)
+{	
+}
+
+void COptions::onKeyDown(const SDL_Event& event)
+{
+	if (event.key.keysym.sym == SDLK_DOWN) {
+		if (mSelection++ < OPTIONS_ELEMENTS - 1); else { mSelection = 0; }
+	}
+	else if (event.key.keysym.sym == SDLK_UP) {
+		if (mSelection-- > 0); else { mSelection = OPTIONS_ELEMENTS - 1; }
+	}
+	else if (event.key.keysym.sym == SDLK_RETURN) {
+		switch (mSelection) {
+		case 0:
+			break;
+		case 1:
+			break;
+		default:
+		case 2:
+			CBaseScreen::quit();
+			break;
+		}
+	}
+}
