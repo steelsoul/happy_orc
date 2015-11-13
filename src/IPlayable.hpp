@@ -14,7 +14,7 @@ class IPlayable {
 public:
 	virtual ~IPlayable() {}
 	virtual void init(SDL_Renderer* renderer) = 0;
-	virtual bool run(SDL_Window* window, SDL_Renderer* renderer) = 0;
+	virtual bool run(SDL_Window* window, SDL_Renderer* renderer, double dt) = 0;
 	virtual void onPrepare(int perc) = 0;
 	virtual bool isAlive() const = 0;
 	virtual void cleanup(IPlayable*) = 0;

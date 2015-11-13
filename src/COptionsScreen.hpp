@@ -5,21 +5,21 @@
  *      Author: alexander
  */
 
-#ifndef SRC_COPTIONS_HPP_
-#define SRC_COPTIONS_HPP_
+#ifndef SRC_COPTIONSSCREEN_HPP_
+#define SRC_COPTIONSSCREEN_HPP_
 
 #include "CBaseScreen.hpp"
 
-class COptions: public CBaseScreen {
+class COptionsScreen: public CBaseScreen {
 public:
-	COptions(CMainDispatcher&, TTF_Font*);
-	virtual ~COptions();
+	COptionsScreen(CMainDispatcher&, TTF_Font*);
+	virtual ~COptionsScreen();
 
 	/**
 	 * IPlayable interface
 	 * */
 	void init(SDL_Renderer* renderer) override;
-	bool run(SDL_Window* window, SDL_Renderer* renderer) override;
+	bool run(SDL_Window* window, SDL_Renderer* renderer, double) override;
 	void onPrepare(int perc) override;
 	bool isAlive() const override;
 	void cleanup(IPlayable* playable) override;
@@ -43,4 +43,4 @@ private:
 
 };
 
-#endif /* SRC_COPTIONS_HPP_ */
+#endif /* SRC_COPTIONSSCREEN_HPP_ */

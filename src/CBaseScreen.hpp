@@ -28,7 +28,7 @@ public:
 	 * */
 	void init(SDL_Renderer* renderer) override;
 
-	bool run(SDL_Window* window, SDL_Renderer* renderer) override;
+	bool run(SDL_Window* window, SDL_Renderer* renderer, double) override;
 
 	void onPrepare(int perc) override;
 
@@ -63,7 +63,6 @@ protected:
 	SDL_Surface* drawMenuTextBlock(SDL_Renderer* renderer, const char** strings, const int count, int selection = 0,
 		SDL_Color baseColor = { 0xff, 0xaa, 0x00, 0 }, SDL_Color selectionColor = { 0xff, 0xff, 0xff, 0 });
 
-private:
 	virtual void onKeyDown(const SDL_Event& event);
 	virtual void onKeyUp(const SDL_Event& event);
 
@@ -71,7 +70,6 @@ private:
 	CMainDispatcher& mDispatcher;
 	bool mAlive = false;
 
-	std::map<int, bool> mInputEvents;
 	TTF_Font* mFont = nullptr;
 	int mTimerID = DEFAULT_TIMER_ID;
 };

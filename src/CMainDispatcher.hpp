@@ -9,10 +9,9 @@
 
 #include "IPlayable.hpp"
 
-#include "CGame.hpp"
-#include "CMenu.hpp"
-
 #include <vector>
+#include "CGameScreen.hpp"
+#include "CMenuScreen.hpp"
 
 class CMainDispatcher: public ICompleteListener, public IDestroyListener {
 public:

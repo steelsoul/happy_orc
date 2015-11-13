@@ -5,14 +5,13 @@
  *      Author: alexander
  */
 
-#include "COptions.hpp"
-
 #include "CMainDispatcher.hpp"
 
 #include <iostream>
 #include <fstream>
 
 #include <cstdio>
+#include "COptionsScreen.hpp"
 
 using namespace std;
 
@@ -21,19 +20,19 @@ const char* OPTIONS_TEXT[OPTIONS_ELEMENTS] = { "ENABLE SOUND", "ENABLE MUSIC", "
 
 const char* const OPTIONS_FILE_NAME = "options.dat";
 
-COptions::COptions(CMainDispatcher& dispatcher, TTF_Font* font)
+COptionsScreen::COptionsScreen(CMainDispatcher& dispatcher, TTF_Font* font)
 : CBaseScreen(dispatcher, font)
 {
 	cout << __PRETTY_FUNCTION__ << " [ctor]\n";
 }
 
-COptions::~COptions()
+COptionsScreen::~COptionsScreen()
 {
 	SDL_DestroyTexture(mOptionsTexture);
 	cout << __PRETTY_FUNCTION__ << " [dtor]\n";
 }
 
-void COptions::init(SDL_Renderer* renderer)
+void COptionsScreen::init(SDL_Renderer* renderer)
 {
 	cout << __PRETTY_FUNCTION__ << "\n";
 	readOptionsFromFile();
@@ -43,7 +42,7 @@ void COptions::init(SDL_Renderer* renderer)
 	SDL_RenderClear(renderer);
 }
 
-bool COptions::run(SDL_Window* window, SDL_Renderer* renderer) {
+bool COptionsScreen::run(SDL_Window* window, SDL_Renderer* renderer, double) {
 	if (CBaseScreen::isAlive()) {
 		CBaseScreen::processInputEvents(200);
 	}
@@ -53,19 +52,19 @@ bool COptions::run(SDL_Window* window, SDL_Renderer* renderer) {
 	return ::CBaseScreen::isAlive();
 }
 
-void COptions::onPrepare(int perc) {
+void COptionsScreen::onPrepare(int perc) {
 	cout << __PRETTY_FUNCTION__ << " " << perc << "%\n";
 }
 
-bool COptions::isAlive() const {
+bool COptionsScreen::isAlive() const {
 	return CBaseScreen::isAlive();
 }
 
-void COptions::cleanup(IPlayable* playable) {
+void COptionsScreen::cleanup(IPlayable* playable) {
 	cout << __PRETTY_FUNCTION__ << "\n";
 }
 
-void COptions::drawFrame(SDL_Window* window, SDL_Renderer* renderer) {
+void COptionsScreen::drawFrame(SDL_Window* window, SDL_Renderer* renderer) {
 	SDL_Rect aDstRect = {100, 100, 0, 0};
 	SDL_Rect aSrcRect = {0, 0, 0, 0};
 
@@ -98,7 +97,7 @@ void COptions::drawFrame(SDL_Window* window, SDL_Renderer* renderer) {
 	SDL_RenderPresent(renderer);
 }
 
-void COptions::readOptionsFromFile() {
+void COptionsScreen::readOptionsFromFile() {
 	ifstream fs(OPTIONS_FILE_NAME);
 
 	cout << __PRETTY_FUNCTION__ << " Open: " << std::boolalpha << fs.is_open() << "\n";
@@ -111,7 +110,7 @@ void COptions::readOptionsFromFile() {
 	}
 }
 
-void COptions::updateOptionsFile() {
+void COptionsScreen::updateOptionsFile() {
 	ofstream fs(OPTIONS_FILE_NAME);
 
 	cout << __PRETTY_FUNCTION__ << " Open: " << std::boolalpha << fs.is_open() << "\n";
@@ -122,11 +121,11 @@ void COptions::updateOptionsFile() {
 	fs.close();
 }
 
-void COptions::onKeyUp(const SDL_Event&)
+void COptionsScreen::onKeyUp(const SDL_Event&)
 {	
 }
 
-void COptions::onKeyDown(const SDL_Event& event)
+void COptionsScreen::onKeyDown(const SDL_Event& event)
 {
 	if (event.key.keysym.sym == SDLK_DOWN) {
 		if (mSelection++ < OPTIONS_ELEMENTS - 1); else { mSelection = 0; }

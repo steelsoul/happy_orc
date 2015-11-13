@@ -8,9 +8,9 @@
 
 #include "CMainDispatcher.hpp"
 #include <iostream>
-#include "CGame.hpp"
-#include "CMenu.hpp"
 
+#include "CGameScreen.hpp"
+#include "CMenuScreen.hpp"
 #include "settings.hpp"
 
 using namespace std;
@@ -63,9 +63,6 @@ void CMainDispatcher::onDestroy(IPlayable* which)
 		if (*p == which) {
 			mToRemovePlayable = which;
 			mPlayables.erase(p);
-//			if (!mPlayables.empty()) {
-//				*(p-1)->init(mRenderer);
-//			}
 			break;
 		}
 	}
@@ -126,22 +123,42 @@ void CMainDispatcher::switchPlayable() {
 void CMainDispatcher::play() {
 	cout << __PRETTY_FUNCTION__ << "\n";
 
+	Uint32 past = SDL_GetTicks();
+    Uint32 now = past, pastFps = past ;
+    double deltaTime = 0.0;
 	while (!mQuit) {
+        int timeElapsed = 0 ;
 		if (!mPlayables.empty()) {
 			IPlayable* playscreen = mPlayables.back();
+	        timeElapsed = (now=SDL_GetTicks()) - past ;
+	        if (timeElapsed >= UPDATE_INTERVAL) {
+	        	past = now;
+	        	deltaTime = timeElapsed / 40.0;
+	        }
 			if (playscreen) {
 				if (mToRemovePlayable) {
 					playscreen->cleanup(mToRemovePlayable);
 					mToRemovePlayable = nullptr;
+
+					SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+					SDL_RenderClear(mRenderer);
+
 				}
-				playscreen->run(mWindow, mRenderer);
+				if (playscreen->isAlive()) {
+					playscreen->run(mWindow, mRenderer, deltaTime);
+				}
 			}
 		} else {
 			mQuit = true;
 		};
-		SDL_Delay(40u);
+		SDL_Delay(10u);
 	}
 
+	for (auto a = mPlayables.rbegin(); a != mPlayables.rend(); a++) {
+		IPlayable* temp = *a;
+		temp->cleanup(nullptr);
+	}
+	mPlayables.clear();
 }
 
 void CMainDispatcher::quit() {

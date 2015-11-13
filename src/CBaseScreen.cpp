@@ -17,13 +17,14 @@ using namespace std;
 
 Uint32 my_callbackfn(Uint32 interval, void* param)
 {
+	cout << "--- MY CALLBACK FN ---\n";
 	if (param) {
 		CBaseScreen* m = reinterpret_cast<CBaseScreen*>(param);
 		if (m) {
 			m->resetTimer();
 		}
 	}
-	return interval;
+	return 0u;
 }
 
 CBaseScreen::CBaseScreen(CMainDispatcher& dispatcher, TTF_Font* font)
@@ -47,8 +48,9 @@ void CBaseScreen::init(SDL_Renderer* renderer)
 	mDispatcher.onComplete(this);
 }
 
-bool CBaseScreen::run(SDL_Window* window, SDL_Renderer* renderer)
+bool CBaseScreen::run(SDL_Window* window, SDL_Renderer* renderer, double)
 {
+	cout << __PRETTY_FUNCTION__ << "\n";
 	if (mAlive) {
 		processInputEvents(100);
 		drawFrame(window, renderer);
@@ -62,15 +64,6 @@ void CBaseScreen::onPrepare(int perc)
 
 void CBaseScreen::cleanup(IPlayable* playable)
 {
-}
-
-bool CBaseScreen::getEvent(int event) const
-{
-	if (mInputEvents.find(event) != mInputEvents.end()) {
-		return mInputEvents.at(event);
-	} else {
-		return false;
-	}
 }
 
 bool CBaseScreen::isTimerRunning() const
@@ -89,23 +82,21 @@ void CBaseScreen::quit() {
 
 void CBaseScreen::processInputEvents(int delayMs)
 {
+
 	SDL_Event event ;
 	if (SDL_PollEvent(&event)) {
 		switch (event.type) {
 		case SDL_QUIT:
-			quit();
+			mDispatcher.quit();
 			break;
 		case SDL_KEYDOWN:
 			if (mTimerID == 0) {
-				mTimerID = SDL_AddTimer(delayMs, &my_callbackfn, this);
+				if (delayMs != 0) mTimerID = SDL_AddTimer(delayMs, &my_callbackfn, this);
 				onKeyDown(event);
 			}
 			break;
 		case SDL_KEYUP:
-			if (mTimerID == 0) {
-				mTimerID = SDL_AddTimer(delayMs, &my_callbackfn, this);
 				onKeyUp(event);
-			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
@@ -168,10 +159,8 @@ SDL_Surface* CBaseScreen::drawMenuTextBlock(SDL_Renderer* renderer,
 
 void CBaseScreen::onKeyDown(const SDL_Event& event)
 {
-    mInputEvents[event.key.keysym.sym] = true;
 }
 
 void CBaseScreen::onKeyUp(const SDL_Event& event)
 {
-    mInputEvents[event.key.keysym.sym] = false;
 }

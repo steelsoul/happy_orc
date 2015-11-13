@@ -1,12 +1,11 @@
 
 #include "CBaseSprite.hpp"
-#include "CGame.hpp"
 #include "COrcSprite.hpp"
 
 #include "CMainDispatcher.hpp"
-#include "CMenu.hpp"
-
 #include <iostream>
+#include "CGameScreen.hpp"
+#include "CMenuScreen.hpp"
 
 using namespace std;
 
@@ -18,6 +17,9 @@ int wmain(int argc, char* argv[])
 int main(int argc, char* argv[])
 #endif
 {
+	// TODO: make sure that SDL library is initialized only once and
+	// it is closed only once too.
+
 	if (0 != TTF_Init()) return -1;
 
 	TTF_Font* commonFont = TTF_OpenFont("Effinground.ttf", 30);
@@ -31,7 +33,7 @@ int main(int argc, char* argv[])
 	cerr << "TTF library initialized.\n";
 
 	CMainDispatcher dispatcher(commonFont);
-	CMenu menu(dispatcher, commonFont);
+	CMenuScreen menu(dispatcher, commonFont);
 
 	dispatcher.setNewPlayable(&menu);
 	dispatcher.play();
