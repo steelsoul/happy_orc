@@ -14,7 +14,9 @@
 #include "COptionsScreen.hpp"
 
 using namespace std;
-
+#ifdef WIN32
+#define __PRETTY_FUNCTION__ __FUNCTION__
+#endif
 const int OPTIONS_ELEMENTS = 3;
 const char* OPTIONS_TEXT[OPTIONS_ELEMENTS] = { "ENABLE SOUND", "ENABLE MUSIC", "EXIT" };
 

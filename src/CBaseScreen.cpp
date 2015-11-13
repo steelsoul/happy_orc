@@ -12,7 +12,9 @@
 #include <iostream>
 
 #include <cstdio>
-
+#ifdef WIN32
+#define __PRETTY_FUNCTION__ __FUNCTION__
+#endif
 using namespace std;
 
 Uint32 my_callbackfn(Uint32 interval, void* param)

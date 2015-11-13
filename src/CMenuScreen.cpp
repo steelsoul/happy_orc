@@ -12,7 +12,9 @@
 #include <iostream>
 
 using namespace std;
-
+#ifdef WIN32
+#define __PRETTY_FUNCTION__ __FUNCTION__
+#endif
 const int MENU_ELEMENTS = 4;
 const char* MENU_TEXT[MENU_ELEMENTS] = { "START GAME", "OPTIONS", "HALL OF FAME", "EXIT" };
 
@@ -49,6 +51,7 @@ bool CMenuScreen::run(SDL_Window* window, SDL_Renderer* renderer, double)
 	}
 
 	CBaseScreen::processInputEvents(20);
+	return CBaseScreen::isAlive();
 }
 
 void CMenuScreen::onPrepare(int perc) {

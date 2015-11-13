@@ -23,6 +23,10 @@
 using namespace std;
 using namespace happyorc;
 
+#ifdef WIN32
+#define __PRETTY_FUNCTION__ __FUNCTION__
+#endif
+
 Uint32 my_timer_fn(Uint32 interval, void *param)
 {
 	cout << "==My TIMER fn==\n"; cout.flush();
