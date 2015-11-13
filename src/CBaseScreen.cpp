@@ -11,6 +11,8 @@
 #include <vector>
 #include <iostream>
 
+#include <cstdio>
+
 using namespace std;
 
 Uint32 my_callbackfn(Uint32 interval, void* param)
@@ -24,37 +26,32 @@ Uint32 my_callbackfn(Uint32 interval, void* param)
 	return interval;
 }
 
-const char* CBaseScreen::DEFAULT_FONT_NAME = "Effinground.ttf";
-
-CBaseScreen::CBaseScreen(CMainDispatcher& dispatcher)
+CBaseScreen::CBaseScreen(CMainDispatcher& dispatcher, TTF_Font* font)
 : mDispatcher(dispatcher)
+, mFont(font)
 {
-	cout << __FUNCTION__ << " [ctor]\n";
+	cout << __PRETTY_FUNCTION__ << " [ctor]\n";
 }
 
 CBaseScreen::~CBaseScreen()
 {
-	cout << __FUNCTION__ << " [dtor]\n";
+	cout << __PRETTY_FUNCTION__ << " [dtor]\n";
 	if (mTimerID) {
 		SDL_RemoveTimer(mTimerID);
 	}
-	closeTTF();	
 }
 
-void CBaseScreen::init(SDL_Window* window, SDL_Renderer* renderer)
+void CBaseScreen::init(SDL_Renderer* renderer)
 {
-	mWindow = window;
-	mRenderer = renderer;
-
-	mAlive = initTTF();
-	mDispatcher.onComplete();
+	mAlive = true;
+	mDispatcher.onComplete(this);
 }
 
-bool CBaseScreen::run()
+bool CBaseScreen::run(SDL_Window* window, SDL_Renderer* renderer)
 {
 	if (mAlive) {
 		processInputEvents(100);
-		drawFrame();
+		drawFrame(window, renderer);
 	}
 	return mAlive;
 }
@@ -63,7 +60,7 @@ void CBaseScreen::onPrepare(int perc)
 {
 }
 
-void CBaseScreen::cleanup()
+void CBaseScreen::cleanup(IPlayable* playable)
 {
 }
 
@@ -87,6 +84,7 @@ void CBaseScreen::resetTimer() {
 
 void CBaseScreen::quit() {
 	mDispatcher.onDestroy(this);
+	mAlive = false;
 }
 
 void CBaseScreen::processInputEvents(int delayMs)
@@ -95,8 +93,7 @@ void CBaseScreen::processInputEvents(int delayMs)
 	if (SDL_PollEvent(&event)) {
 		switch (event.type) {
 		case SDL_QUIT:
-			mDispatcher.onDestroy(this);
-			mAlive = false;
+			quit();
 			break;
 		case SDL_KEYDOWN:
 			if (mTimerID == 0) {
@@ -118,49 +115,17 @@ void CBaseScreen::processInputEvents(int delayMs)
 	}
 }
 
-bool CBaseScreen::initTTF(const char* const fontname, const int fontsize)
+void CBaseScreen::drawFrame(SDL_Window* , SDL_Renderer* )
 {
-	/* Initialize the TTF library */
-	bool ttfInitResult = (TTF_Init() == 0);
-
-	if (ttfInitResult) {
-		mFont = TTF_OpenFont(fontname, fontsize);
-		if (!mFont) {
-			ttfInitResult = false;
-		}
-	}
-
-	if (ttfInitResult) {
-		TTF_SetFontStyle(mFont, TTF_STYLE_NORMAL | TTF_STYLE_BOLD);
-		TTF_SetFontOutline(mFont, 0);
-		TTF_SetFontKerning(mFont, 0);
-		TTF_SetFontHinting(mFont, TTF_HINTING_NORMAL);
-
-		mFontName = fontname;
-		mFontSize = fontsize;
-	}
-
-	return ttfInitResult;
-}
-
-void CBaseScreen::closeTTF()
-{
-	TTF_CloseFont(mFont);
-	TTF_Quit();
-}
-
-void CBaseScreen::drawFrame()
-{
-	// Clear screen
-	SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-	SDL_RenderClear(mRenderer);
 }
 
 void CBaseScreen::sendOnComplete() {
-	mDispatcher.onComplete();
+	mDispatcher.onComplete(this);
 }
 
-void CBaseScreen::drawMenuTextBlock(const char** strings, const int count, SDL_Texture*& texture, int selection,
+SDL_Surface* CBaseScreen::drawMenuTextBlock(SDL_Renderer* renderer,
+									const char** strings, const int count,
+									int selection,
 									SDL_Color baseColor, SDL_Color selectionColor)
 {
 	vector<SDL_Surface*> surfaces;	
@@ -186,8 +151,8 @@ void CBaseScreen::drawMenuTextBlock(const char** strings, const int count, SDL_T
 	int depth = (power2 == 8) ? 32 : (power2 == 4) ? 16 : 8;
 
 	SDL_Surface* allTogether = SDL_CreateRGBSurface(0, totalW, totalH, depth, 0, 0, 0, 0);
-
-	SDL_Rect dstRect = { 0, 0, 0, 0 };
+	printf("TOGETHER: %p\n", (void*)allTogether);
+	SDL_Rect dstRect = {0, 0, 0, 0};
 	for (auto i = 0; i < count; i++) {
 		dstRect.w = sourcesRect[i].w;
 		dstRect.h = sourcesRect[i].h;
@@ -198,14 +163,7 @@ void CBaseScreen::drawMenuTextBlock(const char** strings, const int count, SDL_T
 		surfaces[i] = nullptr;
 	}
 
-	texture = SDL_CreateTextureFromSurface(mRenderer, allTogether);
-	SDL_FreeSurface(allTogether);
-}
-
-void CBaseScreen::changeTextSize(int newTextSize)
-{
-	TTF_CloseFont(mFont);
-	mFont = TTF_OpenFont(mFontName, mFontSize);
+	return allTogether;
 }
 
 void CBaseScreen::onKeyDown(const SDL_Event& event)

@@ -15,55 +15,58 @@
 
 using namespace std;
 
-CMainDispatcher::CMainDispatcher()
+CMainDispatcher::CMainDispatcher(TTF_Font* font)
 : mWindow(nullptr)
 , mRenderer(nullptr)
+, mFont(font)
 , mPlayables()
-, mIsRunning(initSDL())
-, mPrepared(false)
-, mRemoved(false)
+, mQuit(!initSDL())
 {
-	cout << __FUNCTION__ << "[ctor]\n";
+	cout << __PRETTY_FUNCTION__ << "[ctor]\n";
 }
 
 CMainDispatcher::~CMainDispatcher() {
-	cout << __FUNCTION__ << "[dtor]\n";
+	cout << __PRETTY_FUNCTION__ << "[dtor]\n";
 	shutdownSDL();
 }
 
 void CMainDispatcher::setNewPlayable(IPlayable* playable) {
-	cout << __FUNCTION__ << "\n";
+	cout << __PRETTY_FUNCTION__ << "\n";
 
-	mPlayables.push_back(playable);
-	mPrepared = false;
-	playable->init(mWindow, mRenderer);
+	if (playable) {
+		mNewPlayable = playable;
+		mNewPlayable->init(mRenderer);
+	}
 }
 
 void CMainDispatcher::onPrepare(int percentage) {
-	cout << __FUNCTION__ << " " << percentage << "%\n";
+	cout << __PRETTY_FUNCTION__ << " " << percentage << "%\n";
 
 	if (!mPlayables.empty()) {
 		mPlayables.back()->onPrepare(percentage);
 	}
 }
 
-void CMainDispatcher::onComplete() {
-	cout << __FUNCTION__ << "\n";
+void CMainDispatcher::onComplete(IPlayable* playable) {
+	cout << __PRETTY_FUNCTION__ << "\n";
 
-	mPrepared = true;
-	SDL_ShowWindow(mWindow);
+	if (playable == mNewPlayable) {
+		mPlayables.push_back(mNewPlayable);
+		mNewPlayable = nullptr;
+	}
 }
 
 void CMainDispatcher::onDestroy(IPlayable* which)
 {
-	cout << __FUNCTION__ << "\n"; cout.flush();
+	cout << __PRETTY_FUNCTION__ << "\n"; cout.flush();
 	for (auto p = mPlayables.begin(); p != mPlayables.end(); p++) {
 		if (*p == which) {
-		mPlayables.erase(p);
-		mRemoved = true;
-		cout << "0000\n"; cout.flush();
-		//if (!mPlayables.empty()) mPlayables.back()->cleanup();
-		break;
+			mToRemovePlayable = which;
+			mPlayables.erase(p);
+//			if (!mPlayables.empty()) {
+//				*(p-1)->init(mRenderer);
+//			}
+			break;
 		}
 	}
 }
@@ -94,11 +97,15 @@ bool CMainDispatcher::initSDL()
 		cerr << "Couldn't initialize SDL: " << SDL_GetError() << "\n";
 	}
 
+	if (result)
+	{
+		SDL_ShowWindow(mWindow);
+	}
 	return result;
 }
 
 void CMainDispatcher::shutdownSDL() {
-	cout << __FUNCTION__ << "\n";
+	cout << __PRETTY_FUNCTION__ << "\n";
 
     if (NULL != mRenderer) {
         SDL_DestroyRenderer(mRenderer);
@@ -113,37 +120,32 @@ void CMainDispatcher::shutdownSDL() {
 }
 
 void CMainDispatcher::switchPlayable() {
-	cout << __FUNCTION__ << "\n";
+	cout << __PRETTY_FUNCTION__ << "\n";
 }
 
 void CMainDispatcher::play() {
-	cout << __FUNCTION__ << "\n"; cout.flush();
+	cout << __PRETTY_FUNCTION__ << "\n";
 
-	//static int counter = 0;
-
-	while (!mPlayables.empty()) {
-//		cout << "1"; cout.flush();
-		if (mPrepared && !mPlayables.empty()) {
-//			cout << "0"; cout.flush();
-			if (mRemoved) {
-				mPlayables.back()->cleanup();
-				mRemoved = false;
+	while (!mQuit) {
+		if (!mPlayables.empty()) {
+			IPlayable* playscreen = mPlayables.back();
+			if (playscreen) {
+				if (mToRemovePlayable) {
+					playscreen->cleanup(mToRemovePlayable);
+					mToRemovePlayable = nullptr;
+				}
+				playscreen->run(mWindow, mRenderer);
 			}
-			else {
-				mIsRunning = mPlayables.back()->run();
-			}
-		}
-//		cout << "2"; cout.flush();
-		//if (counter++ > 200) break;
-		SDL_Delay(10);
+		} else {
+			mQuit = true;
+		};
+		SDL_Delay(40u);
 	}
+
 }
 
 void CMainDispatcher::quit() {
-	cout << __FUNCTION__ << "\n";
-	for (auto p : mPlayables) {
-		p->cleanup();
-	}
-	mPlayables.clear();
+	cout << __PRETTY_FUNCTION__ << "\n";
+	mQuit = true;
 }
 

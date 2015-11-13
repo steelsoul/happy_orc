@@ -22,14 +22,14 @@ class CGame;
 
 class CMenu: public IPlayable {
 public:
-	CMenu(CMainDispatcher& );
+	CMenu(CMainDispatcher&, TTF_Font* );
 	virtual ~CMenu();
 
-	virtual void init(SDL_Window* window, SDL_Renderer* renderer) override;
-	virtual bool run() override;
+	virtual void init(SDL_Renderer* renderer) override;
+	virtual bool run(SDL_Window* window, SDL_Renderer* renderer) override;
 	virtual void onPrepare(int perc) override;
 	virtual bool isAlive() const override;
-	virtual void cleanup() override;
+	virtual void cleanup(IPlayable* playable) override;
 
 	void quit();
 
@@ -39,20 +39,20 @@ private:
 	void onKeyDown(const SDL_Event& event);
 	void onKeyUp(const SDL_Event& event);
 
-	void drawFrame();
+	void drawFrame(SDL_Window* window, SDL_Renderer* renderer);
 
 	void processInput();
 
 private:
 	CMainDispatcher& mDispatcher;
-	SDL_Window* mWindow;
-	SDL_Renderer* mRenderer;
+
 	TTF_Font* mFont;
 	std::map<int, int> mEvents;
 	bool mAlive;
 	int mSelection;
 	SDL_Texture* mMenuTexture;
 	int mTimerId;
+	bool mChanged = true;
 	
 
 	COptions* mOptions;

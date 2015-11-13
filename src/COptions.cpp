@@ -12,6 +12,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <cstdio>
+
 using namespace std;
 
 const int OPTIONS_ELEMENTS = 3;
@@ -19,79 +21,87 @@ const char* OPTIONS_TEXT[OPTIONS_ELEMENTS] = { "ENABLE SOUND", "ENABLE MUSIC", "
 
 const char* const OPTIONS_FILE_NAME = "options.dat";
 
-COptions::COptions(CMainDispatcher& dispatcher)
-: CBaseScreen(dispatcher)
+COptions::COptions(CMainDispatcher& dispatcher, TTF_Font* font)
+: CBaseScreen(dispatcher, font)
 {
-	cout << __FUNCTION__ << " [ctor]\n";
+	cout << __PRETTY_FUNCTION__ << " [ctor]\n";
 }
 
 COptions::~COptions()
 {
-	cout << __FUNCTION__ << " [dtor]\n";
-	updateOptionsFile();
+	SDL_DestroyTexture(mOptionsTexture);
+	cout << __PRETTY_FUNCTION__ << " [dtor]\n";
 }
 
-void COptions::init(SDL_Window* window, SDL_Renderer* renderer)
+void COptions::init(SDL_Renderer* renderer)
 {
-	cout << __FUNCTION__ << "\n";
+	cout << __PRETTY_FUNCTION__ << "\n";
 	readOptionsFromFile();
 
-	::CBaseScreen::init(window, renderer);
+	::CBaseScreen::init(renderer);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+	SDL_RenderClear(renderer);
 }
 
-bool COptions::run() {
+bool COptions::run(SDL_Window* window, SDL_Renderer* renderer) {
 	if (CBaseScreen::isAlive()) {
 		CBaseScreen::processInputEvents(200);
-		drawFrame();
+	}
+	if (CBaseScreen::isAlive()) {
+		drawFrame(window, renderer);
 	}
 	return ::CBaseScreen::isAlive();
 }
 
 void COptions::onPrepare(int perc) {
-	cout << __FUNCTION__ << " " << perc << "%\n";
+	cout << __PRETTY_FUNCTION__ << " " << perc << "%\n";
 }
 
 bool COptions::isAlive() const {
 	return CBaseScreen::isAlive();
 }
 
-void COptions::cleanup() {
-	cout << __FUNCTION__ << "\n";
+void COptions::cleanup(IPlayable* playable) {
+	cout << __PRETTY_FUNCTION__ << "\n";
 }
 
-void COptions::drawFrame() {
+void COptions::drawFrame(SDL_Window* window, SDL_Renderer* renderer) {
 	SDL_Rect aDstRect = {100, 100, 0, 0};
 	SDL_Rect aSrcRect = {0, 0, 0, 0};
 
-	// Clear screen
-	SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-	SDL_RenderClear(mRenderer);
-	
-	if (mOptionsTexture) {
-		SDL_DestroyTexture(mOptionsTexture);
-		mOptionsTexture = nullptr;
-	}
-	
-	CBaseScreen::drawMenuTextBlock(OPTIONS_TEXT, OPTIONS_ELEMENTS, mOptionsTexture, mSelection);
-	
-	if (mOptionsTexture) {
-		int w; 
-		int h;
-		SDL_QueryTexture(mOptionsTexture, 0, 0, &w, &h);
-		
-		aSrcRect.w = aDstRect.w = w;
-		aSrcRect.h = aDstRect.h = h;
+	if (mUpdated) {
 
-		SDL_RenderCopy(mRenderer, mOptionsTexture, &aSrcRect, &aDstRect);
+		if (mOptionsTexture) {
+			SDL_DestroyTexture(mOptionsTexture);
+			mOptionsTexture = nullptr;
+		}
+
+		SDL_Surface* tempSurface = CBaseScreen::drawMenuTextBlock(renderer,
+				OPTIONS_TEXT, OPTIONS_ELEMENTS,	mSelection);
+		printf("> TOGETHER: %p\n", (void*)tempSurface);
+
+		if (tempSurface) {
+			printf("w: %d, h: %d\n", tempSurface->w, tempSurface->h);
+			aSrcRect.w = aDstRect.w = tempSurface->w;
+			aSrcRect.h = aDstRect.h = tempSurface->h;
+
+			mOptionsTexture = SDL_CreateTextureFromSurface(renderer, tempSurface);
+			SDL_FreeSurface(tempSurface);
+	
+			SDL_RenderCopy(renderer, mOptionsTexture, &aSrcRect, &aDstRect);
+		}
+		mUpdated = false;
 	}
 
-	SDL_RenderPresent(mRenderer);
+	//
+	//SDL_RenderClear(renderer);
+	SDL_RenderPresent(renderer);
 }
 
 void COptions::readOptionsFromFile() {
 	ifstream fs(OPTIONS_FILE_NAME);
 
-	cout << __FUNCTION__ << " Open: " << std::boolalpha << fs.is_open() << "\n";
+	cout << __PRETTY_FUNCTION__ << " Open: " << std::boolalpha << fs.is_open() << "\n";
 	if (!fs.is_open()) {
 		cout << "No file.\n";
 	} else {
@@ -104,7 +114,7 @@ void COptions::readOptionsFromFile() {
 void COptions::updateOptionsFile() {
 	ofstream fs(OPTIONS_FILE_NAME);
 
-	cout << __FUNCTION__ << " Open: " << std::boolalpha << fs.is_open() << "\n";
+	cout << __PRETTY_FUNCTION__ << " Open: " << std::boolalpha << fs.is_open() << "\n";
 	if (!fs.is_open()) {
 		cout << "Creating new file.\n";
 	}
@@ -120,9 +130,11 @@ void COptions::onKeyDown(const SDL_Event& event)
 {
 	if (event.key.keysym.sym == SDLK_DOWN) {
 		if (mSelection++ < OPTIONS_ELEMENTS - 1); else { mSelection = 0; }
+		mUpdated = true;
 	}
 	else if (event.key.keysym.sym == SDLK_UP) {
 		if (mSelection-- > 0); else { mSelection = OPTIONS_ELEMENTS - 1; }
+		mUpdated = true;
 	}
 	else if (event.key.keysym.sym == SDLK_RETURN) {
 		switch (mSelection) {
@@ -132,6 +144,7 @@ void COptions::onKeyDown(const SDL_Event& event)
 			break;
 		default:
 		case 2:
+			updateOptionsFile();
 			CBaseScreen::quit();
 			break;
 		}

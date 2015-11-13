@@ -27,42 +27,40 @@ class CGame: public IPlayable {
 		bool dropham;
 	};
 public:
-	CGame(CMainDispatcher&);
+	CGame(CMainDispatcher&, TTF_Font*);
 	virtual ~CGame();
 	void startTimer();
 
 	/**
 		IPlayable interface
 	*/
-	virtual void init(SDL_Window* window, SDL_Renderer* renderer) override;
-	virtual bool run() override;
+	virtual void init(SDL_Renderer* renderer) override;
+	virtual bool run(SDL_Window* window, SDL_Renderer* renderer) override;
 	virtual void onPrepare(int perc) override;
 	virtual bool isAlive() const override;
-	virtual void cleanup() override;
+	virtual void cleanup(IPlayable* playable) override;
 
 private:
 
     void stop();
-    void draw();
-    void fillRect(SDL_Rect* rc, int r, int g, int b );
+    void draw(SDL_Window* window, SDL_Renderer* renderer);
+    void fillRect(SDL_Renderer* renderer, SDL_Rect* rc, int r, int g, int b );
     void fpsChanged( int fps );
     void onQuit();
     void onKeyDown( SDL_Event* event );
     void onKeyUp( SDL_Event* event );
     void update(double deltaTime);
 
-	void loadsprite(const char* path, SDL_Texture*&);
+	void loadsprite(SDL_Renderer* renderer, const char* path, SDL_Texture*&);
 	void setKeyColor(SDL_Surface*);
 
-	void drawScore();
+	void drawScore(SDL_Renderer* renderer);
 
 	void checkCollisions();
 	void onLoose();
 
 private:
 	CMainDispatcher& mDispatcher;
-	SDL_Window* mWindow;
-	SDL_Renderer* mRenderer;
     std::map<int,int> keys;
     Uint32 frameSkip ;
 	bool mpaused;

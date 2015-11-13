@@ -16,7 +16,7 @@
 
 class CMainDispatcher: public ICompleteListener, public IDestroyListener {
 public:
-	CMainDispatcher();
+	CMainDispatcher(TTF_Font* font);
 	virtual ~CMainDispatcher();
 
 	void setNewPlayable(IPlayable* playable);
@@ -27,7 +27,7 @@ public:
 	 * ICompleteListener interface
 	 * */
 	void onPrepare(int percentage) override;
-	void onComplete() override;
+	void onComplete(IPlayable* playable) override;
 
 	/**
 	 * IDestroyListener interface
@@ -44,11 +44,11 @@ private:
 private:
 	SDL_Window* mWindow;
 	SDL_Renderer* mRenderer;
-
+	TTF_Font* mFont;
+	IPlayable* mNewPlayable = nullptr;
+	IPlayable* mToRemovePlayable = nullptr;
 	std::vector<IPlayable*> mPlayables;
-	bool mPrepared;
-	bool mIsRunning;
-	bool mRemoved;
+	bool mQuit = false;
 
 };
 

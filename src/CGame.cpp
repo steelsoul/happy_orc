@@ -33,17 +33,15 @@ Uint32 my_timer_fn(Uint32 interval, void *param)
 	return 0u;
 }
 
-CGame::CGame(CMainDispatcher& dispatcher)
+CGame::CGame(CMainDispatcher& dispatcher, TTF_Font* font)
 : mDispatcher(dispatcher)
-, mWindow(nullptr)
-, mRenderer(nullptr)
 , keys()
 , frameSkip(0u)
 , mpaused(false)
 , background(nullptr)
 , orcs(nullptr)
 , ham(nullptr)
-, mFont(nullptr)
+, mFont(font)
 , mscore(nullptr)
 , mscorepoints(0)
 , paused(nullptr)
@@ -64,45 +62,21 @@ CGame::~CGame() {
 	this->stop();
 }
 
-void CGame::init(SDL_Window* window, SDL_Renderer* renderer)
+void CGame::init(SDL_Renderer* renderer)
 {
-	mWindow = window;
-	mRenderer = renderer;
-
-	bool ttfInitResult = true;
-
-	/* Initialize the TTF library */
-	ttfInitResult = (TTF_Init() == 0);
-
-	if (ttfInitResult) {
-		mFont = TTF_OpenFont("Effinground.ttf", 30);
-		if (!mFont) {
-			ttfInitResult = false;
-		}
-	}
-
-	if (ttfInitResult) {
-		TTF_SetFontStyle(mFont, TTF_STYLE_NORMAL | TTF_STYLE_BOLD);
-		TTF_SetFontOutline(mFont, 0);
-		TTF_SetFontKerning(mFont, 0);
-		TTF_SetFontHinting(mFont, TTF_HINTING_NORMAL);
-	}
-
-	cerr << "TTF library initialized: " << boolalpha << ttfInitResult << "\n";
-
 	background = IMG_LoadTexture(renderer, "forest_480x320.jpg");
 	if (!background) {
 		fprintf(stderr, "Error: %s", SDL_GetError());
 		return;
 	}
 
-	loadsprite("Orcs.bmp", orcs);
+	loadsprite(renderer, "Orcs.bmp", orcs);
 	if (!orcs) {
 		fprintf(stderr, "Error: %s", SDL_GetError());
 		return;
 	}
 
-	loadsprite("ham.bmp", ham);
+	loadsprite(renderer, "ham.bmp", ham);
 	if (!ham) {
 		fprintf(stderr, "Error: %s", SDL_GetError());
 		return;
@@ -112,10 +86,10 @@ void CGame::init(SDL_Window* window, SDL_Renderer* renderer)
 	startTimer();
 
 	mAlive = true;
-	mDispatcher.onComplete();
+	mDispatcher.onComplete(this);
 }
 
-bool CGame::run() {	
+bool CGame::run(SDL_Window* window, SDL_Renderer* renderer) {
 	SDL_Event event;
 
 	if (mAlive) {
@@ -156,7 +130,7 @@ bool CGame::run() {
 			if (!mpaused) {
 				update(0.1); // TODO: fix this
 			}
-			draw(); 
+			draw(window, renderer);
 		}
 	}
 
@@ -171,7 +145,7 @@ bool CGame::isAlive() const {
 	return mAlive;
 }
 
-void CGame::cleanup() {
+void CGame::cleanup(IPlayable* playable) {
 	cout << __FUNCTION__ << "\n";
 }
 
@@ -192,16 +166,16 @@ void CGame::startTimer() {
 //	fprintf(stdout, "master direction : %d\n", masterdata.direction);
 }
 
-void CGame::draw() {
+void CGame::draw(SDL_Window* window, SDL_Renderer* renderer) {
 	SDL_Rect aDstRect;
 	SDL_Rect aSrcRect;
 
 	// Clear screen
-	SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-	SDL_RenderClear(mRenderer);
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+	SDL_RenderClear(renderer);
 
 	if (NULL != background) {
-		SDL_RenderCopy(mRenderer, background, NULL, NULL);
+		SDL_RenderCopy(renderer, background, NULL, NULL);
 	}
 
 	//// Render hero
@@ -216,7 +190,7 @@ void CGame::draw() {
 	aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
 	aSrcRect.h = static_cast<int>(spriteSrc.mheight);
 
-	SDL_RenderCopy(mRenderer, orcs, &aSrcRect, &aDstRect);
+	SDL_RenderCopy(renderer, orcs, &aSrcRect, &aDstRect);
 
 	/// Render master
 	aDstRect.x = amaster.getX();
@@ -230,7 +204,7 @@ void CGame::draw() {
 	aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
 	aSrcRect.h = static_cast<int>(spriteSrc.mheight);
 
-	SDL_RenderCopy(mRenderer, orcs, &aSrcRect, &aDstRect);
+	SDL_RenderCopy(renderer, orcs, &aSrcRect, &aDstRect);
 
 	/// Render ham
 	if (masterdata.dropham)
@@ -246,9 +220,9 @@ void CGame::draw() {
 		aSrcRect.w = static_cast<int>(spriteSrc.mwidth);
 		aSrcRect.h = static_cast<int>(spriteSrc.mheight);
 
-		SDL_RenderCopy(mRenderer, ham, &aSrcRect, &aDstRect);
+		SDL_RenderCopy(renderer, ham, &aSrcRect, &aDstRect);
 	}
-	drawScore();
+	drawScore(renderer);
 
 	if (mpaused) {
 		if (paused) {
@@ -257,7 +231,7 @@ void CGame::draw() {
 		SDL_Color textColor = { 0xFF, 0xFF, 0x00, 0 };
 		SDL_Surface * tempsurf = TTF_RenderText_Solid(mFont, "P A U S E D", textColor);
 		
-		paused = SDL_CreateTextureFromSurface(mRenderer, tempsurf);
+		paused = SDL_CreateTextureFromSurface(renderer, tempsurf);
 		
 		aSrcRect.x = 0;
 		aSrcRect.y = 0;
@@ -275,13 +249,13 @@ void CGame::draw() {
 		aSrcRect.h = tempsurf->h;
 
 		SDL_FreeSurface(tempsurf);
-		SDL_RenderCopy(mRenderer, paused, &aSrcRect, &aDstRect);
+		SDL_RenderCopy(renderer, paused, &aSrcRect, &aDstRect);
 	}
 
-	SDL_RenderPresent(mRenderer);
+	SDL_RenderPresent(renderer);
 }
 
-void CGame::drawScore() {
+void CGame::drawScore(SDL_Renderer* renderer) {
 	SDL_Color textColor = { 0xFF, 0x00, 0x00, 0 };
 	std::stringstream ss;
 	ss << mscorepoints << " PTS";
@@ -292,7 +266,7 @@ void CGame::drawScore() {
 		mscore = NULL;
 	}
 
-	mscore = SDL_CreateTextureFromSurface(mRenderer, tempsurf);
+	mscore = SDL_CreateTextureFromSurface(renderer, tempsurf);
 
 	SDL_Rect textsource;
 
@@ -305,39 +279,33 @@ void CGame::drawScore() {
 
 	SDL_Rect dst;
 	dst.x = 10; dst.y = DISPLAY_WIDTH * 0.2; dst.w = textsource.w; dst.h = textsource.h;
-	SDL_RenderCopy(mRenderer, mscore, &textsource, &dst);
+	SDL_RenderCopy(renderer, mscore, &textsource, &dst);
 }
 
 
 void CGame::stop() {
+    if (NULL != background) {
+    	SDL_DestroyTexture(background);
+    }
+	if (NULL != orcs) {
+		SDL_DestroyTexture(orcs);
+	}
+	if (NULL != ham) {
+		SDL_DestroyTexture(ham);
+	}
+	if (NULL != mscore) {
+		SDL_DestroyTexture(mscore);
+	}
 
- //   if (NULL != background) {
- //   	SDL_DestroyTexture(background);
- //   }
-	//if (NULL != orcs) {
-	//	SDL_DestroyTexture(orcs);
-	//}
-	//if (NULL != ham) {
-	//	SDL_DestroyTexture(ham);
-	//}
-	//if (NULL != mscore) {
-	//	SDL_DestroyTexture(mscore);
-	//}
-
-	//TTF_CloseFont(mFont);
-	//TTF_Quit();
 	if (mTimerID) SDL_RemoveTimer(mTimerID);
 }
 
-void CGame::fillRect(SDL_Rect* rc, int r, int g, int b ) {
-    SDL_SetRenderDrawColor(mRenderer, r, g, b, SDL_ALPHA_OPAQUE);
-	SDL_RenderFillRect(mRenderer, rc);
+void CGame::fillRect(SDL_Renderer* renderer, SDL_Rect* rc, int r, int g, int b ) {
+    SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE);
+	SDL_RenderFillRect(renderer, rc);
 }
 
 void CGame::fpsChanged( int fps ) {
-	std::stringstream ss;
-	ss << "Happy Orc " << fps << " FPS";
-	SDL_SetWindowTitle(mWindow, ss.str().c_str());
 }
 
 void CGame::onQuit() {
@@ -406,13 +374,13 @@ void CGame::setKeyColor(SDL_Surface* surface)
 	}
 }
 
-void CGame::loadsprite(const char* path, SDL_Texture*& texture)
+void CGame::loadsprite(SDL_Renderer* renderer, const char* path, SDL_Texture*& texture)
 {
 	SDL_Surface* temp = SDL_LoadBMP(path);
 	if (temp)
 	{
 		setKeyColor(temp);
-		texture = SDL_CreateTextureFromSurface(mRenderer, temp);
+		texture = SDL_CreateTextureFromSurface(renderer, temp);
 		SDL_FreeSurface(temp);
 	} else {
 		fprintf(stderr, "Error: %s\n", SDL_GetError());

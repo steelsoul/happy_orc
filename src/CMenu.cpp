@@ -27,11 +27,9 @@ Uint32 my_callbackfn2(Uint32 interval, void* param)
 	return interval;
 }
 
-CMenu::CMenu(CMainDispatcher& dispatcher)
+CMenu::CMenu(CMainDispatcher& dispatcher, TTF_Font* font)
 : mDispatcher(dispatcher)
-, mWindow(nullptr)
-, mRenderer(nullptr)
-, mFont(nullptr)
+, mFont(font)
 , mEvents()
 , mAlive(false)
 , mSelection(0)
@@ -40,45 +38,21 @@ CMenu::CMenu(CMainDispatcher& dispatcher)
 , mOptions(nullptr)
 , mGame(nullptr)
 {
-	cout << __FUNCTION__ << " [ctor]\n";
+	cout << __PRETTY_FUNCTION__ << " [ctor]\n";
 }
 
 CMenu::~CMenu()
 {
-	cout << __FUNCTION__ << " [dtor]\n";
+	cout << __PRETTY_FUNCTION__ << " [dtor]\n";
 }
 
-void CMenu::init(SDL_Window* window, SDL_Renderer* renderer)
+void CMenu::init(SDL_Renderer* renderer)
 {
-	mWindow = window;
-	mRenderer = renderer;
-
-	bool ttfInitResult = true;
-
-	/* Initialize the TTF library */
-	ttfInitResult = (TTF_Init() == 0);
-
-	if (ttfInitResult) {
-		mFont = TTF_OpenFont("Effinground.ttf", 30);
-		if (!mFont) {
-			ttfInitResult = false;
-		}
-	}
-
-	if (ttfInitResult) {
-		TTF_SetFontStyle(mFont, TTF_STYLE_NORMAL | TTF_STYLE_BOLD);
-		TTF_SetFontOutline(mFont, 0);
-		TTF_SetFontKerning(mFont, 0);
-		TTF_SetFontHinting(mFont, TTF_HINTING_NORMAL);
-	}
-
-	cerr << "TTF library initialized: " << boolalpha << ttfInitResult << "\n";
-
 	mAlive = true;
-	mDispatcher.onComplete();
+	mDispatcher.onComplete(this);
 }
 
-bool CMenu::run()
+bool CMenu::run(SDL_Window* window, SDL_Renderer* renderer)
 {
 	if (mAlive) {
 		SDL_Event event ;
@@ -87,7 +61,7 @@ bool CMenu::run()
 			case SDL_QUIT:
 				mDispatcher.onDestroy(this);
 				mAlive = false;
-				break;
+				return mAlive;
 			case SDL_KEYDOWN:
 				if (mTimerId == 0) {
 					mTimerId = SDL_AddTimer(100, &my_callbackfn2, this);
@@ -103,14 +77,19 @@ bool CMenu::run()
 				break;
 			}
 		}
-		drawFrame();
+		if (mChanged) {
+			drawFrame(window, renderer);
+			mChanged = false;
+		}
 
 
 		if (mEvents[SDLK_DOWN]) {
 			mSelection++; if (mSelection >= MENU_ELEMENTS) mSelection = 0;
+			mChanged = true;
 			mEvents.clear();
 		} else if (mEvents[SDLK_UP]) {
 			mSelection--; if (mSelection < 0) mSelection = MENU_ELEMENTS - 1;
+			mChanged = true;
 			mEvents.clear();
 		} else if (mEvents[SDLK_RETURN]) {
 			processInput();
@@ -122,23 +101,23 @@ bool CMenu::run()
 }
 
 void CMenu::onPrepare(int perc) {
-	cout << __FUNCTION__ << " " << perc << "%\n";
+	cout << __PRETTY_FUNCTION__ << " " << perc << "%\n";
 }
 
 bool CMenu::isAlive() const {
 	return mAlive;
 }
 
-void CMenu::cleanup() {
-	cout << __FUNCTION__ << "\n";
-	if (mOptions) {
+void CMenu::cleanup(IPlayable* playable) {
+	cout << __PRETTY_FUNCTION__ << "\n";
+	if (mOptions == playable) {
 		delete mOptions;
 		mOptions = nullptr;
-	}
-	if (mGame) {
+	} else if (mGame == playable) {
 		delete mGame;
 		mGame = nullptr;
 	}
+	mChanged = true;
 }
 
 void CMenu::quit() {
@@ -155,16 +134,15 @@ void CMenu::onKeyUp(const SDL_Event& event)
 	mEvents[event.key.keysym.sym] = 0;
 }
 
-void CMenu::drawFrame() {
+void CMenu::drawFrame(SDL_Window* window, SDL_Renderer* renderer)
+{
+	if (!renderer) return;
+
 	SDL_Rect aDstRect = {100, 100, 0, 0};
 	SDL_Rect aSrcRect = {0, 0, 0, 0};
 
-	// Clear screen
-	SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-	SDL_RenderClear(mRenderer);
-
-	SDL_Color textColor = 	{0xff, 0xaa, 0x00, 0};
-	SDL_Color selectColor = {0xff, 0xff, 0xff, 0};
+	SDL_Color textColor = 	{0xff, 0xaa, 0x00, 0u};
+	SDL_Color selectColor = {0xff, 0xff, 0xff, 0u};
 	SDL_Color color = textColor;
 
 	SDL_Surface* surfaces[4];
@@ -205,24 +183,27 @@ void CMenu::drawFrame() {
 	if (mMenuTexture) {
 		SDL_DestroyTexture(mMenuTexture);
 	}
-	mMenuTexture = SDL_CreateTextureFromSurface(mRenderer, allTogether);
+	mMenuTexture = SDL_CreateTextureFromSurface(renderer, allTogether);
 
 	SDL_FreeSurface(allTogether);
 
-	SDL_RenderCopy(mRenderer, mMenuTexture, &aSrcRect, &aDstRect);
+	// Clear screen
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, mMenuTexture, &aSrcRect, &aDstRect);
 
-	SDL_RenderPresent(mRenderer);
+	SDL_RenderPresent(renderer);
 }
 
 void CMenu::processInput() {
-	cout << __FUNCTION__ << " selection: " << mSelection << "\n";
+	cout << __PRETTY_FUNCTION__ << " selection: " << mSelection << "\n";
 	switch (mSelection) {
 	case 0:
-		mGame = new CGame(mDispatcher);
+		mGame = new CGame(mDispatcher, mFont);
 		mDispatcher.setNewPlayable(mGame);
 		break;
 	case 1:
-		mOptions = new COptions(mDispatcher);
+		if (!mOptions) mOptions = new COptions(mDispatcher, mFont);
 		mDispatcher.setNewPlayable(mOptions);
 		break;
 	case 2:
