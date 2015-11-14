@@ -58,7 +58,7 @@ CGameScreen::CGameScreen(CMainDispatcher& dispatcher, TTF_Font* font)
 , mInput()
 {
 	cout << __FUNCTION__ << "[ctor]\n";
-	srand(time(NULL));
+	srand(static_cast<Uint32>(time(NULL)));
 	mAhero.setX(mAmaster.getX());
 }
 
@@ -113,7 +113,7 @@ void CGameScreen::cleanup(IPlayable* playable) {
 
 void CGameScreen::startTimer() {
 	mTimerID2 = SDL_AddTimer(500 + rand() % 800, my_timer_fn, this);
-	fprintf(stderr, "Start timer with ID %d\n", static_cast<int>(mTimerID2));
+	//fprintf(stderr, "Start timer with ID %d\n", static_cast<int>(mTimerID2));
 
 	/* update direction of master orc */
 	mMasterdata.direction = rand() % 3;
@@ -233,7 +233,7 @@ void CGameScreen::drawScore(SDL_Renderer* renderer) {
 	SDL_QueryTexture(mScoreTexture, 0, 0, &textsource.w, &textsource.h);
 
 	SDL_Rect dst;
-	dst.x = 10; dst.y = DISPLAY_WIDTH * 0.2; dst.w = textsource.w; dst.h = textsource.h;
+	dst.x = 10; dst.y = static_cast<int>(DISPLAY_WIDTH * 0.2); dst.w = textsource.w; dst.h = textsource.h;
 	SDL_RenderCopy(renderer, mScoreTexture, &textsource, &dst);
 }
 

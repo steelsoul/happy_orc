@@ -79,10 +79,10 @@ void COptionsScreen::drawFrame(SDL_Window* window, SDL_Renderer* renderer) {
 
 		SDL_Surface* tempSurface = CBaseScreen::drawMenuTextBlock(renderer,
 				OPTIONS_TEXT, OPTIONS_ELEMENTS,	mSelection);
-		printf("> TOGETHER: %p\n", (void*)tempSurface);
+		//printf("> TOGETHER: %p\n", (void*)tempSurface);
 
 		if (tempSurface) {
-			printf("w: %d, h: %d\n", tempSurface->w, tempSurface->h);
+			//printf("w: %d, h: %d\n", tempSurface->w, tempSurface->h);
 			aSrcRect.w = aDstRect.w = tempSurface->w;
 			aSrcRect.h = aDstRect.h = tempSurface->h;
 
@@ -94,8 +94,6 @@ void COptionsScreen::drawFrame(SDL_Window* window, SDL_Renderer* renderer) {
 		mUpdated = false;
 	}
 
-	//
-	//SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
 }
 
