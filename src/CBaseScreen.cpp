@@ -19,7 +19,7 @@ using namespace std;
 
 Uint32 my_callbackfn(Uint32 interval, void* param)
 {
-	cout << "--- MY CALLBACK FN ---\n";
+//	cout << "--- MY CALLBACK FN ---\n";
 	if (param) {
 		CBaseScreen* m = reinterpret_cast<CBaseScreen*>(param);
 		if (m) {
@@ -154,7 +154,7 @@ SDL_Surface* CBaseScreen::drawMenuTextBlock(SDL_Renderer* renderer, const vector
 	int depth = (power2 == 8) ? 32 : (power2 == 4) ? 16 : 8;
 
 	SDL_Surface* allTogether = SDL_CreateRGBSurface(0, totalW, totalH, depth, 0, 0, 0, 0);
-	printf("TOGETHER: %p\n", (void*)allTogether);
+//	printf("TOGETHER: %p\n", (void*)allTogether);
 	SDL_Rect dstRect = {0, 0, 0, 0};
 	for (auto i = 0; i < strings.size(); i++) {
 		dstRect.w = sourcesRect[i].w;

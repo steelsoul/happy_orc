@@ -15,7 +15,7 @@
 
 class CMainDispatcher: public ICompleteListener, public IDestroyListener {
 public:
-	CMainDispatcher(TTF_Font* font);
+	CMainDispatcher(SDL_Window* window, SDL_Renderer* renderer, TTF_Font* font);
 	virtual ~CMainDispatcher();
 
 	void setNewPlayable(IPlayable* playable);
@@ -34,9 +34,6 @@ public:
 	void onDestroy(IPlayable* which) override;
 
 private:
-	bool initSDL();
-	void shutdownSDL();
-
 	void switchPlayable();
 
 

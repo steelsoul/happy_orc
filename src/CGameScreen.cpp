@@ -30,7 +30,7 @@ using namespace happyorc;
 
 Uint32 my_timer_fn(Uint32 interval, void *param)
 {
-	cout << "==My TIMER fn==\n"; cout.flush();
+//	cout << "==My TIMER fn==\n"; cout.flush();
 	if (param) {
 		CGameScreen* game = reinterpret_cast<CGameScreen*>(param);
 		if (game) game->startTimer();

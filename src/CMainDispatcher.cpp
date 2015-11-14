@@ -19,19 +19,19 @@ using namespace std;
 #define __PRETTY_FUNCTION__ __FUNCTION__
 #endif
 
-CMainDispatcher::CMainDispatcher(TTF_Font* font)
-: mWindow(nullptr)
-, mRenderer(nullptr)
+CMainDispatcher::CMainDispatcher(SDL_Window* window,
+		SDL_Renderer* renderer, TTF_Font* font)
+: mWindow(window)
+, mRenderer(renderer)
 , mFont(font)
 , mPlayables()
-, mQuit(!initSDL())
+, mQuit(false)
 {
 	cout << __PRETTY_FUNCTION__ << "[ctor]\n";
 }
 
 CMainDispatcher::~CMainDispatcher() {
 	cout << __PRETTY_FUNCTION__ << "[dtor]\n";
-	shutdownSDL();
 }
 
 void CMainDispatcher::setNewPlayable(IPlayable* playable) {
@@ -70,54 +70,6 @@ void CMainDispatcher::onDestroy(IPlayable* which)
 			break;
 		}
 	}
-}
-
-bool CMainDispatcher::initSDL()
-{
-	int flags = SDL_WINDOW_HIDDEN /*| SDL_WINDOW_FULLSCREEN*/ ;
-	bool result = true;
-
-	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
-		result = false;
-	}
-	/* Initialize the TTF library */
-	if (result && TTF_Init() < 0) {
-		result = false;
-	}
-
-	if (result &&
-		SDL_CreateWindowAndRenderer(DISPLAY_WIDTH,
-									DISPLAY_HEIGHT,
-									flags, &mWindow,
-									&mRenderer) < 0)
-	{
-		result = false;
-	}
-
-	if (!result) {
-		cerr << "Couldn't initialize SDL: " << SDL_GetError() << "\n";
-	}
-
-	if (result)
-	{
-		SDL_ShowWindow(mWindow);
-	}
-	return result;
-}
-
-void CMainDispatcher::shutdownSDL() {
-	cout << __PRETTY_FUNCTION__ << "\n";
-
-    if (NULL != mRenderer) {
-        SDL_DestroyRenderer(mRenderer);
-        mRenderer = nullptr;
-    }
-    if (NULL != mWindow) {
-        SDL_DestroyWindow(mWindow);
-        mWindow = nullptr;
-    }
-
-    SDL_Quit();
 }
 
 void CMainDispatcher::switchPlayable() {

@@ -7,6 +7,8 @@
 #include "CGameScreen.hpp"
 #include "CMenuScreen.hpp"
 
+#include "settings.hpp"
+
 using namespace std;
 
 using namespace happyorc;
@@ -17,8 +19,15 @@ int wmain(int argc, char* argv[])
 int main(int argc, char* argv[])
 #endif
 {
-	// TODO: make sure that SDL library is initialized only once and
-	// it is closed only once too.
+	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) return -4;
+
+	SDL_Window* window = nullptr;
+	SDL_Renderer* renderer = nullptr;
+	if (SDL_CreateWindowAndRenderer(DISPLAY_WIDTH,	DISPLAY_HEIGHT,
+			SDL_WINDOW_HIDDEN /*| SDL_WINDOW_FULLSCREEN*/, &window,
+									&renderer) < 0) return -3;
+
+	SDL_ShowWindow(window);
 
 	if (0 != TTF_Init()) return -1;
 
@@ -32,7 +41,7 @@ int main(int argc, char* argv[])
 
 	cerr << "TTF library initialized.\n";
 
-	CMainDispatcher dispatcher(commonFont);
+	CMainDispatcher dispatcher(window, renderer, commonFont);
 	CMenuScreen menu(dispatcher, commonFont);
 
 	dispatcher.setNewPlayable(&menu);
@@ -40,6 +49,11 @@ int main(int argc, char* argv[])
 
 	TTF_CloseFont(commonFont);
 	TTF_Quit();
+
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+
+    SDL_Quit();
 
 	return 0;
 }

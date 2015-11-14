@@ -46,7 +46,7 @@ void CHallOfFameScreen::init(SDL_Renderer* renderer)
 
 	cout << __PRETTY_FUNCTION__ << " Open: " << std::boolalpha << fs.is_open() << "\n";
 	if (!fs.is_open()) {
-		cout << "Creating file.\n";
+		cout << "Creating file " << HALLOFFAME_FILE_NAME << "\n";
 		fstream fsout(HALLOFFAME_FILE_NAME, fstream::out);
 
 		for (auto a: mBest) {
@@ -57,7 +57,6 @@ void CHallOfFameScreen::init(SDL_Renderer* renderer)
 		int a;
 		vector<int> newscores;
 		while (fs >> a) {
-			cout << "a: " << a << " ";
 			newscores.push_back(a);
 		}
 		mBest.clear();
