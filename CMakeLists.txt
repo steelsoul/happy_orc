@@ -79,7 +79,9 @@ SET(SRC_LIST
 	${SRC_DIR}/CGameScreen.cpp
 	${SRC_DIR}/CBaseScreen.cpp
 	${SRC_DIR}/CMenuScreen.cpp
-	${SRC_DIR}/COptionsScreen.cpp)
+	${SRC_DIR}/COptionsScreen.cpp
+	${SRC_DIR}/CHallOfFameScreen.cpp
+	)
 	
 ADD_EXECUTABLE(${APP_NAME} ${SRC_LIST})
 TARGET_LINK_LIBRARIES(${APP_NAME} ${PROJECT_LIBS})

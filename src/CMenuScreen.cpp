@@ -8,6 +8,7 @@
 #include "CMenuScreen.hpp"
 #include "CMainDispatcher.hpp"
 #include "COptionsScreen.hpp"
+#include "CHallOfFameScreen.hpp"
 
 #include <iostream>
 
@@ -26,6 +27,7 @@ CMenuScreen::CMenuScreen(CMainDispatcher& dispatcher, TTF_Font* font)
 , mMenuTexture(nullptr)
 , mOptions(nullptr)
 , mGame(nullptr)
+, mHOF(nullptr)
 {
 	cout << __PRETTY_FUNCTION__ << " [ctor]\n";
 }
@@ -66,6 +68,9 @@ void CMenuScreen::cleanup(IPlayable* playable) {
 	} else if (mGame == playable || playable == nullptr) {
 		delete mGame;
 		mGame = nullptr;
+	} else if (mHOF == playable || playable == nullptr) {
+		delete mHOF;
+		mHOF = nullptr;
 	}
 	mChanged = true;
 
@@ -126,6 +131,8 @@ void CMenuScreen::processInput() {
 		mDispatcher.setNewPlayable(mOptions);
 		break;
 	case 2:
+		if (!mHOF) mHOF = new CHallOfFameScreen(mDispatcher, mFont);
+		mDispatcher.setNewPlayable(mHOF);
 		break;
 	case 3:
 	default:

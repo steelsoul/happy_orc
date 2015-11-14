@@ -121,17 +121,27 @@ SDL_Surface* CBaseScreen::drawMenuTextBlock(SDL_Renderer* renderer,
 									int selection,
 									SDL_Color baseColor, SDL_Color selectionColor)
 {
-	vector<SDL_Surface*> surfaces;	
+	vector<string> thestrings;
+	for (int i = 0; i < count; i++) {
+		thestrings.push_back(strings[i]);
+	}
+
+	return drawMenuTextBlock(renderer, thestrings, selection, baseColor, selectionColor);
+}
+
+SDL_Surface* CBaseScreen::drawMenuTextBlock(SDL_Renderer* renderer, const vector<string> strings, int selection,
+		SDL_Color baseColor, SDL_Color selectionColor)
+{
+	vector<SDL_Surface*> surfaces;
 	vector<SDL_Rect> sourcesRect;
 	int totalW = 0; int totalH = 0;
 
-	for (auto i = 0; i < count; i++) {
+	for (int i = 0; i < strings.size(); i++) {
 		SDL_Color color;
 		SDL_Rect srcRect = {0, 0, 0, 0};
 
-
 		color = (i == selection) ? selectionColor : baseColor;
-		SDL_Surface* srcSurface = TTF_RenderText_Solid(mFont, strings[i], color);
+		SDL_Surface* srcSurface = TTF_RenderText_Solid(mFont, strings[i].c_str(), color);
 		srcRect.w = srcSurface->w;
 		srcRect.h = srcSurface->h;
 		totalH += srcSurface->h;
@@ -146,7 +156,7 @@ SDL_Surface* CBaseScreen::drawMenuTextBlock(SDL_Renderer* renderer,
 	SDL_Surface* allTogether = SDL_CreateRGBSurface(0, totalW, totalH, depth, 0, 0, 0, 0);
 	printf("TOGETHER: %p\n", (void*)allTogether);
 	SDL_Rect dstRect = {0, 0, 0, 0};
-	for (auto i = 0; i < count; i++) {
+	for (auto i = 0; i < strings.size(); i++) {
 		dstRect.w = sourcesRect[i].w;
 		dstRect.h = sourcesRect[i].h;
 		SDL_BlitSurface(surfaces[i], &sourcesRect[i], allTogether, &dstRect);

@@ -23,6 +23,7 @@ enum {
 	, HAM_SPEED = 2
 	, HAM_SPRITE_WIDTH = 32
 	, HAM_SPRITE_HEIGHT = 32
+	, DEFAULT_SCORES_SIZE = 5
 };
 
 

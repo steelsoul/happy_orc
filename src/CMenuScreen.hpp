@@ -21,6 +21,7 @@
 class CMainDispatcher;
 class COptionsScreen;
 class CGameScreen;
+class CHallOfFameScreen;
 
 class CMenuScreen: public CBaseScreen {
 public:
@@ -49,6 +50,7 @@ private:
 
 	COptionsScreen* mOptions;
 	CGameScreen* mGame;
+	CHallOfFameScreen* mHOF;
 };
 
 #endif /* SRC_CMENUSCREEN_HPP_ */

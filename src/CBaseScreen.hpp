@@ -13,6 +13,8 @@
 #include "SDL_ttf.h"
 
 #include <map>
+#include <vector>
+#include <string>
 
 class CMainDispatcher;
 
@@ -60,8 +62,12 @@ protected:
 		If selection is in range [0-count-1], then changes selected item color to selectionColor. 
 		Returns: SDL_Surface* with text data.
 	*/
-	SDL_Surface* drawMenuTextBlock(SDL_Renderer* renderer, const char** strings, const int count, int selection = 0,
+	SDL_Surface* drawMenuTextBlock(SDL_Renderer* renderer, const char** strings, const int count, int selection = -1,
 		SDL_Color baseColor = { 0xff, 0xaa, 0x00, 0 }, SDL_Color selectionColor = { 0xff, 0xff, 0xff, 0 });
+
+	SDL_Surface* drawMenuTextBlock(SDL_Renderer* renderer, const std::vector<std::string> strings, int selection = -1,
+			SDL_Color baseColor = { 0xff, 0xaa, 0x00, 0 }, SDL_Color selectionColor = { 0xff, 0xff, 0xff, 0 });
+
 
 	virtual void onKeyDown(const SDL_Event& event);
 	virtual void onKeyUp(const SDL_Event& event);
