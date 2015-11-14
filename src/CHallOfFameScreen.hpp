@@ -12,7 +12,8 @@
 
 class CHallOfFameScreen: public CBaseScreen {
 public:
-	const char* const HALLOFFAME_FILE_NAME = "bestscores.dat";
+	static const char* const HALLOFFAME_FILE_NAME;
+	static const int DEFAULT_SCORE;
 
 	CHallOfFameScreen(CMainDispatcher& dispatcher, TTF_Font* font);
 	virtual ~CHallOfFameScreen();
@@ -25,10 +26,15 @@ public:
 	void onPrepare(int perc) override;
 	void cleanup(IPlayable* playable) override;
 
+	static void writeScorePoints(int score);
+
 protected:
 	void onKeyDown(const SDL_Event& event);
 	void onKeyUp(const SDL_Event& event);
 	void drawFrame(SDL_Window* window, SDL_Renderer* renderer);
+
+private:
+	static void updateHallOfFame(std::vector<int>& data, int score);
 
 private:
 	TTF_Font* mFont;

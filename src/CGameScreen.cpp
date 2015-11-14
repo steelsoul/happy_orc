@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <ctime>
 
+#include "CHallOfFameScreen.hpp"
 #include "CGameScreen.hpp"
 #include "settings.hpp"
 
@@ -58,7 +59,7 @@ CGameScreen::CGameScreen(CMainDispatcher& dispatcher, TTF_Font* font)
 {
 	cout << __FUNCTION__ << "[ctor]\n";
 	srand(time(NULL));
-	mAham.setX(rand() % (DISPLAY_WIDTH - HAM_WIDTH));
+	mAhero.setX(mAmaster.getX());
 }
 
 CGameScreen::~CGameScreen() {
@@ -379,6 +380,7 @@ void CGameScreen::checkCollisions() {
 
 void CGameScreen::onLoose() {
 	fprintf(stdout, "You loose with %d PTS. Have a nice day!\n", mScorepoints);
+	CHallOfFameScreen::writeScorePoints(mScorepoints);
 	CBaseScreen::quit();
 }
 

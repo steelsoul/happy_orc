@@ -19,11 +19,14 @@
 
 using namespace std;
 
+const char* const CHallOfFameScreen::HALLOFFAME_FILE_NAME = "bestscores.dat";
+const int CHallOfFameScreen::DEFAULT_SCORE = 0;
+
 CHallOfFameScreen::CHallOfFameScreen(CMainDispatcher& dispatcher, TTF_Font* font)
 : CBaseScreen(dispatcher, font)
 , mFont(font)
 , mBestTexture(nullptr)
-, mBest(5, 0)
+, mBest(5, DEFAULT_SCORE)
 {
 	cout << __PRETTY_FUNCTION__ << "[ctor]\n";
 }
@@ -47,17 +50,21 @@ void CHallOfFameScreen::init(SDL_Renderer* renderer)
 		fstream fsout(HALLOFFAME_FILE_NAME, fstream::out);
 
 		for (auto a: mBest) {
-			fsout << a;
+			fsout << a << endl;
 		}
 		fsout.close();
 	} else {
-		for (auto &a: mBest) {
-			fs >> a;
+		int a;
+		vector<int> newscores;
+		while (fs >> a) {
+			cout << "a: " << a << " ";
+			newscores.push_back(a);
 		}
+		mBest.clear();
+		mBest = newscores;
 		cout << "Data read.\n";
+		fs.close();
 	}
-
-	fs.close();
 
 	CBaseScreen::init(renderer);
 
@@ -81,6 +88,46 @@ void CHallOfFameScreen::onPrepare(int perc)
 void CHallOfFameScreen::cleanup(IPlayable* playable)
 {
 	cout << __PRETTY_FUNCTION__ << "\n";
+}
+
+void CHallOfFameScreen::writeScorePoints(int score)
+{
+	cout << __PRETTY_FUNCTION__ << "\n";
+	fstream fs(HALLOFFAME_FILE_NAME, fstream::in | fstream::out);
+	if (!fs.is_open()) {
+		ofstream ofs(HALLOFFAME_FILE_NAME, fstream::out);
+		ofs << score << "\n";
+		for (int i = 0; i < DEFAULT_SCORES_SIZE -1; i++) {
+			ofs << DEFAULT_SCORE << endl;
+		}
+		ofs.close();
+	} else {
+		vector<int> scores;
+		int temp;
+		while (fs >> temp) {
+			scores.push_back(temp);
+		}
+		fs.close();
+
+		updateHallOfFame(scores, score);
+		ofstream ofs(HALLOFFAME_FILE_NAME, fstream::out);
+		for (auto a: scores) {
+			ofs << a << "\n";
+		}
+		ofs.close();
+	}
+}
+
+void CHallOfFameScreen::updateHallOfFame(std::vector<int>& bestscores, int score)
+{
+	std::vector<int> scores = bestscores;
+	scores.push_back(score);
+
+	sort(scores.begin(), scores.end(),
+		[=](int i, int j) {
+		return i > j;
+	});
+	copy(scores.begin(), scores.begin() + DEFAULT_SCORES_SIZE, bestscores.begin());
 }
 
 void CHallOfFameScreen::onKeyDown(const SDL_Event& event)
